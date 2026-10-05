@@ -1,5 +1,7 @@
 export let language='zh-Hant';
 const zh={
+ 'Loading docks · flying to route start':'上落貨區 · 飛往導覽起點','Flying back to loading docks':'飛回上落貨區',
+ 'Loading docks → red route → loading docks':'上落貨區 → 紅線巡覽 → 上落貨區',
  'Frames per second':'每秒影格',
  'Red route start':'紅線起點（西南面）','Red route end':'紅線終點（南面出貨區）','W3 loading dock':'W3 上落貨區','North freezer turnaround':'北面冷凍庫折返點','North freezer return aisle':'北面冷凍庫回程','Cold room passage':'冷藏與冷凍庫連接通道','Frozen room cross aisle':'冷凍庫橫向通道','Frozen room turnaround':'冷凍庫折返點','Frozen room return aisle':'冷凍庫回程','Frozen room, east return':'冷凍庫東面出口','South loading area exit':'南面上落貨區出口',
  'Northwest empty area':'西北面空置區','Northwest cross aisle':'西北面橫向通道','Walking to next task':'步行前往工作位置','W2 / W3 rapid door':'W2／W3 快速門','W2 / W1 rapid door':'W2／W1 快速門','W3 / LOADING DOCK':'W3／上落貨區',

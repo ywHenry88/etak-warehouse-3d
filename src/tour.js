@@ -1,5 +1,5 @@
 // A* plans against the model's actual walls, stock, door apertures and floor levels.
-export function createTour({walk,canPlan,canYield,canStep,moveTo,face,begin,doorRequest,tr}){
+export function createTour({walk,canPlan,canYield,canStep,moveTo,face,begin,enterRoute,advanceFlight,finishRoute,complete,cancel,doorRequest,tr}){
  // Ordered checkpoints trace the user's red line; aisle return legs are intentional.
  const stops=[
   ['Red route start',1.5,38.2],
@@ -32,7 +32,7 @@ export function createTour({walk,canPlan,canYield,canStep,moveTo,face,begin,door
   ['South loading area exit',36.6,36.4],
   ['Red route end',37.5,39.5]
  ];
- let active=false,index=1,path=[],pathIndex=0,pause=false,dwell=0,replan=0,status='Start auto tour',visited=[],blocked=0,yielding=false,yields=0;
+ let active=false,phase='idle',index=1,path=[],pathIndex=0,pause=false,dwell=0,replan=0,status='Start auto tour',visited=[],blocked=0,yielding=false,yields=0;
  const cell=.3,xMin=.3,zMin=-1.5,nx=210,nz=164;
  const point=id=>({x:xMin+(id%nx)*cell,z:zMin+Math.floor(id/nx)*cell});
  const node=(x,z)=>Math.round((z-zMin)/cell)*nx+Math.round((x-xMin)/cell);
@@ -90,9 +90,10 @@ export function createTour({walk,canPlan,canYield,canStep,moveTo,face,begin,door
   const action=active?(pause?'Resume tour':'Pause tour'):'Start auto tour';
   const compact=document.getElementById('compactPause');compact.textContent=pause?'▶':'Ⅱ';compact.setAttribute('aria-label',tr(action));
   document.body.classList.toggle('touring',active);
- document.getElementById('autoTour').textContent=tr(active?(pause?'Resume tour':'Pause tour'):'Start auto tour');document.getElementById('tourStatus').textContent=active?`${index+1}/${stops.length} · ${tr(stops[index][0])} · ${tr(status)}`:tr(status);}
- function start(){begin();active=true;pause=false;index=1;visited=[stops[0][0]];face(Math.atan2(stops[index][1]-walk.x,stops[index][2]-walk.z),1);path=plan(stops[index]);pathIndex=0;dwell=0;replan=0;blocked=0;yielding=false;yields=0;status='Auto walking';refresh();}
- function stop(){active=false;pause=false;path=[];status='Start auto tour';refresh();}
+  document.body.classList.toggle('tour-flying',active&&(phase==='intro'||phase==='outro'));
+ document.getElementById('autoTour').textContent=tr(active?(pause?'Resume tour':'Pause tour'):'Start auto tour');document.getElementById('tourStatus').textContent=active&&phase==='walking'?`${index+1}/${stops.length} · ${tr(stops[index][0])} · ${tr(status)}`:tr(status);}
+ function start(){begin(stops[1]);active=true;phase='intro';pause=false;index=0;visited=[];path=[];pathIndex=0;dwell=0;replan=0;blocked=0;yielding=false;yields=0;status='Loading docks · flying to route start';refresh();}
+ function stop(){cancel();active=false;phase='idle';pause=false;path=[];status='Start auto tour';refresh();}
  function toggle(){if(!active)start();else{pause=!pause;refresh();}}
  function recover(){
   const next=plan(stops[index]);
@@ -100,16 +101,25 @@ export function createTour({walk,canPlan,canYield,canStep,moveTo,face,begin,door
   if(blocked>=1.5){const refuge=plan(stops[index],true);if(refuge.length){path=refuge;pathIndex=0;yielding=true;yields++;blocked=0;}}
   replan=1;
  }
- function update(dt){if(!active||pause)return;replan-=dt;if(dwell>0){dwell-=dt;doorRequest(walk);return;}
+ function update(dt){if(!active||pause)return;
+  if(phase==='intro'||phase==='outro'){
+   if(advanceFlight(dt)){
+    if(phase==='intro'){enterRoute();phase='walking';index=1;visited=[stops[0][0]];path=plan(stops[index]);pathIndex=0;status='Auto walking';}
+    else{complete();active=false;phase='complete';status='Tour complete';}
+    refresh();
+   }
+   return;
+  }
+  replan-=dt;if(dwell>0){dwell-=dt;doorRequest(walk);return;}
   if(!path.length){blocked+=dt;if(replan<=0)recover();status=yielding?'Stepping aside for traffic':'Waiting for clear route';doorRequest(walk);refresh();return;}
   const p=path[pathIndex],dx=p.x-walk.x,dz=p.z-walk.z,dist=Math.hypot(dx,dz),look=lookAhead();
   if(Math.hypot(look.x-walk.x,look.z-walk.z)>.03)face(Math.atan2(look.x-walk.x,look.z-walk.z),dt);
   doorRequest(p);
   const step=Math.min(dist,6.6*dt),x=walk.x+dx/(dist||1)*step,z=walk.z+dz/(dist||1)*step;
-  if(moveTo(x,z)){blocked=0;status=yielding?'Stepping aside for traffic':'Auto walking';if(step>=dist-1e-7){pathIndex++;if(pathIndex>=path.length){if(yielding){yielding=false;path=[];dwell=1;replan=0;}else{visited.push(stops[index][0]);index++;if(index>=stops.length){active=false;status='Tour complete';refresh();return;}dwell=0;path=plan(stops[index]);pathIndex=0;}}}}
+  if(moveTo(x,z)){blocked=0;status=yielding?'Stepping aside for traffic':'Auto walking';if(step>=dist-1e-7){pathIndex++;if(pathIndex>=path.length){if(yielding){yielding=false;path=[];dwell=1;replan=0;}else{visited.push(stops[index][0]);index++;if(index>=stops.length){phase='outro';path=[];status='Flying back to loading docks';finishRoute();refresh();return;}dwell=0;path=plan(stops[index]);pathIndex=0;}}}}
   else{blocked+=dt;status='Waiting for door or traffic';if(replan<=0)recover();}
   refresh();
  }
  document.getElementById('autoTour').onclick=toggle;document.getElementById('stopTour').onclick=stop;
- refresh();return {start,stop,toggle,update,refresh,state:()=>({active,paused:pause,index,status,visited:[...visited],target:stops[index],pathLength:path.length,yielding,yields}),stops};
+ refresh();return {start,stop,toggle,update,refresh,state:()=>({active,phase,paused:pause,index,status,visited:[...visited],target:stops[index],pathLength:path.length,yielding,yields}),stops};
 }
