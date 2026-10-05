@@ -208,7 +208,9 @@ if(t<8){p=pathAt(f.points,0);p.heading=pickHeading;lift=f.pickHeight+Math.max(0,
 else if(t<46){p=pathAt(f.points,(t-8)/38);lift=.28;f.phase='To dispatch';}
 else if(t<53){p=pathAt(f.points,1);lift=.28-(t-46)/7*.33;f.phase='Loading trailer';loaded=t<51;}
 else if(t<94){p=pathAt(f.points,1-(t-53)/41);lift=.1;loaded=false;f.phase='Returning empty';}
-else{p=pathAt(f.points,0);p.heading=pickHeading;lift=.1;loaded=false;f.phase='Next collection';}
+// Rest along the aisle after returning; turning across it would block visitors
+// throughout the other vehicles' dispatch turns.
+else{p=pathAt(f.points,0);if(f.index===3)p.heading=pickHeading;lift=.1;loaded=false;f.phase='Next collection';}
 f.g.position.set(p.x,f.index===3?Math.max(0,Math.min(.25,(35.8-p.z)*.25)):0,p.z);f.g.rotation.y=p.heading;f.carriage.position.y=lift;f.cargo.visible=loaded;f.pickup.visible=t<=3||t>=96;f.wheels.forEach(w=>w.rotation.x=time*4);truckGroups[f.index].loads.children[0].visible=t>=51||time+f.offset>=cycle;}
 
 // Clean versions of the physical details visible in CCTV: guardrails, pallet trucks,

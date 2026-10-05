@@ -1,5 +1,6 @@
 export let language='zh-Hant';
 const zh={
+ 'Show walking controls':'展開步行控制','Hide walking controls':'收合步行控制','Stepping aside for traffic':'移至旁邊讓車先行',
  'One click · 14 stops · 5× walking speed':'一鍵啟動 · 14個景點 · 5倍步行速度','VIEWPOINTS':'選擇視角','DISPLAY OPTIONS':'顯示選項',
  'Start auto tour':'開始自動導覽','Pause tour':'暫停導覽','Resume tour':'繼續導覽','Stop tour':'停止導覽','Auto tour · whole warehouse':'自動導覽 · 全倉巡覽','Auto walking':'自動步行中','Waiting for clear route':'等候通道暢通','Waiting for door or traffic':'等候開門或讓路','Tour complete':'全倉導覽完成','Southwest staging':'西南面作業區','Indoor truck apron':'室內貨車停泊區','North freezer cross aisle':'北面冷凍庫橫向通道','NORTH FROZEN / −18°C':'北面冷凍庫 / −18°C','−18°C / insulated frozen storage':'−18°C / 保溫冷凍儲存區',
 

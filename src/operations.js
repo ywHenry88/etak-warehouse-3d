@@ -1,4 +1,6 @@
 import {createTour} from './tour.js';
+import {createMobileControls} from './mobile-controls.js';
+import {onLanguage} from './i18n.js';
 export function createOperations(ctx){
  const {THREE,world,camera,controls,canvas,M,box,bar,cylinder,sign,dynamicPallet,doors,forklifts,updateForklift,pathAt,wallSegments,columnRects,storageFootprints,truckGroups,dockZ,tr,getView,setView,showInterior}=ctx;
  const $=id=>document.getElementById(id),clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
@@ -110,7 +112,7 @@ export function createOperations(ctx){
   return Math.abs(dx)<Math.abs(rx)*halfWidth+Math.abs(fx)*hl+hw&&Math.abs(dz)<Math.abs(rz)*halfWidth+Math.abs(fz)*hl+hd&&Math.abs(dx*rx+dz*rz)<halfWidth+hw*Math.abs(rx)+hd*Math.abs(rz)&&Math.abs(dx*fx+dz*fz)<hl+hw*Math.abs(fx)+hd*Math.abs(fz);
  }
  function bodyWallHit(f){return staticWalls.find(r=>bodyHits(f.g.position.x,f.g.position.z,f.g.rotation.y,r));}
- function pedestrianHit(f){return walking&&bodyHits(f.g.position.x,f.g.position.z,f.g.rotation.y,{x0:walk.x-.40,x1:walk.x+.40,z0:walk.z-.40,z1:walk.z+.40},.72,1.4,2.3);}
+ function pedestrianHit(f){return walking&&bodyHits(f.g.position.x,f.g.position.z,f.g.rotation.y,{x0:walk.x-.26,x1:walk.x+.26,z0:walk.z-.26,z1:walk.z+.26},.69,1.3,2.3);}
  function step(dt){
   doorsStep(dt);
   for(const f of staff.slice(2)){
@@ -150,17 +152,49 @@ export function createOperations(ctx){
   if(x<.4||x>63||z<-1.8||z>47.25)return false;
   if(x<39&&(z<.25||z>44.7))return false;
   if(staticWalls.some(r=>inside(x,z,r,.24))||columnRects.some(r=>inside(x,z,r,.1))||storageFootprints.some(r=>inside(x,z,r,.26))||truckObstacles.some(r=>inside(x,z,r,.23)))return false;
-  const personRect={x0:x-.24,x1:x+.24,z0:z-.24,z1:z+.24};if([...forklifts,...staff].some(f=>bodyHits(f.g.position.x,f.g.position.z,f.g.rotation.y,personRect,.6,1.25,1.25)))return false;
+  // Match the envelope that makes vehicles yield to the visitor. Otherwise the
+  // visitor can enter their stopping space and both parties wait indefinitely.
+  const personRect={x0:x-.26,x1:x+.26,z0:z-.26,z1:z+.26};
+  if([...forklifts,...staff].some(f=>bodyHits(f.g.position.x,f.g.position.z,f.g.rotation.y,personRect,.69,1.3,2.3)))return false;
   return true;
  }
  function canWalk(x,z){return canPlan(x,z)&&!blockedDoor(x,z,.43)&&Math.abs(floorHeight(x,z)-floorHeight(walk.x,walk.z))<.20;
  }
  function walkCamera(){walk.y=floorHeight(walk.x,walk.z);camera.position.set(walk.x-21,walk.y+1.67,walk.z-22.5);camera.lookAt(camera.position.x+Math.sin(walk.yaw)*Math.cos(walk.pitch),camera.position.y+Math.sin(walk.pitch),camera.position.z+Math.cos(walk.yaw)*Math.cos(walk.pitch));camera.updateMatrixWorld();}
- function relocate(place){const p={south:[27.8,39.95,Math.PI/2],north:[20.5,11.6,Math.PI/2],rampNorth:[40.7,-.55,Math.PI/2],rampSouth:[40.7,46.1,Math.PI/2]}[place]||[27.8,39.95,Math.PI/2];[walk.x,walk.z,walk.yaw]=p;walk.pitch=-.025;if(walking)walkCamera();}
- function enterWalk(){walking=true;controls.enabled=false;camera.fov=70;camera.updateProjectionMatrix();showInterior();document.body.classList.add('walking');relocate($('walkStart').value);canvas.focus();}
+ function relocate(place){
+  const p={south:[27.8,39.95,Math.PI/2],north:[20.5,11.6,Math.PI/2],rampNorth:[40.7,-.55,Math.PI/2],rampSouth:[40.7,46.1,Math.PI/2]}[place]||[27.8,39.95,Math.PI/2];
+  let position=p;
+  // A tour can start at any traffic phase; never spawn inside a passing vehicle.
+  if(!canPlan(p[0],p[1])){
+   const candidates=[];for(let dx=-3;dx<=3;dx+=.15)for(let dz=-3;dz<=3;dz+=.15){const x=p[0]+dx,z=p[1]+dz;if(canPlan(x,z)&&!blockedDoor(x,z,.43)&&Math.abs(floorHeight(x,z)-floorHeight(p[0],p[1]))<.1)candidates.push([x,z,p[2],dx*dx+dz*dz]);}
+   candidates.sort((a,b)=>a[3]-b[3]);if(candidates.length)position=candidates[0];
+  }
+  [walk.x,walk.z,walk.yaw]=position;walk.pitch=-.025;if(walking)walkCamera();
+ }
+ function enterWalk(){walking=true;controls.enabled=false;camera.fov=70;camera.updateProjectionMatrix();showInterior();document.body.classList.add('walking');mobileControls.collapse();relocate($('walkStart').value);canvas.focus();}
  function exitWalk(){walking=false;keys.clear();intent.x=intent.z=0;tour.stop();lookDrag=false;document.body.classList.remove('walking');controls.enabled=true;}
  function walkMove(forward,side,dt){const speed=10.0;const dx=(Math.sin(walk.yaw)*forward-Math.cos(walk.yaw)*side)*speed*dt,dz=(Math.cos(walk.yaw)*forward+Math.sin(walk.yaw)*side)*speed*dt;const steps=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.08));for(let i=0;i<steps;i++){if(canWalk(walk.x+dx/steps,walk.z))walk.x+=dx/steps;if(canWalk(walk.x,walk.z+dz/steps))walk.z+=dz/steps;}walkCamera();}
- const tour=createTour({walk,canPlan,canStep:(x,z,a,b)=>Math.abs(floorHeight(x,z)-floorHeight(a,b))<.20,moveTo:(x,z)=>{if(!canWalk(x,z))return false;walk.x=x;walk.z=z;walkCamera();return true;},face:(yaw,dt)=>{const delta=Math.atan2(Math.sin(yaw-walk.yaw),Math.cos(yaw-walk.yaw));walk.yaw+=delta*Math.min(1,dt*5);walkCamera();},begin:()=>{setView('walk');ctx.resumeSimulation?.();relocate('south');doors.forEach(d=>d.mode='auto');},doorRequest:p=>{intent.x=p.x-walk.x;intent.z=p.z-walk.z;},tr});
+ // A refuge must be off nearby equipment routes, not merely clear this instant.
+ function canYield(x,z){
+  if(Math.hypot(x-walk.x,z-walk.z)<1)return false;
+  for(const f of [...forklifts,...staff]){
+   if(Math.hypot(f.g.position.x-walk.x,f.g.position.z-walk.z)>8)continue;
+   for(let i=1;i<f.points.length;i++){
+    const [ax,az]=f.points[i-1],[bx,bz]=f.points[i],dx=bx-ax,dz=bz-az;
+    const t=clamp(((x-ax)*dx+(z-az)*dz)/(dx*dx+dz*dz||1),0,1);
+    if(Math.hypot(x-ax-t*dx,z-az-t*dz)<1.8)return false;
+   }
+  }
+  return true;
+ }
+ function canStep(x,z,a,b){
+  // A diagonal can cut across the lowered apron even when both ends are level.
+  const n=Math.max(1,Math.ceil(Math.hypot(a-x,b-z)/.03));let height=floorHeight(x,z);
+  for(let i=1;i<=n;i++){const next=floorHeight(x+(a-x)*i/n,z+(b-z)*i/n);if(Math.abs(next-height)>=.20)return false;height=next;}
+  return true;
+ }
+ const tour=createTour({walk,canPlan,canYield,canStep,moveTo:(x,z)=>{if(!canWalk(x,z))return false;walk.x=x;walk.z=z;walkCamera();return true;},face:(yaw,dt)=>{const delta=Math.atan2(Math.sin(yaw-walk.yaw),Math.cos(yaw-walk.yaw));walk.yaw+=delta*Math.min(1,dt*5);walkCamera();},begin:()=>{setView('walk');ctx.resumeSimulation?.();relocate('south');doors.forEach(d=>d.mode='auto');},doorRequest:p=>{intent.x=p.x-walk.x;intent.z=p.z-walk.z;},tr});
+ const mobileControls=createMobileControls({tr,toggleTour:()=>tour.toggle(),onLanguage});
  $('exitWalk').onclick=()=>setView('overview');$('walkStart').onchange=()=>{tour.stop();relocate($('walkStart').value);};
  window.addEventListener('keydown',e=>{if(!walking||['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;if(e.code==='Escape'){setView('overview');return;}if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)){e.preventDefault();keys.add(e.code);}if(e.code==='KeyE'){const d=doors.filter(d=>Math.hypot(d.x-walk.x,d.z-walk.z)<5).sort((a,b)=>Math.hypot(a.x-walk.x,a.z-walk.z)-Math.hypot(b.x-walk.x,b.z-walk.z))[0];if(d)setDoorMode(d.id,d.mode==='open'?'closed':'open');}});
  window.addEventListener('keyup',e=>keys.delete(e.code));window.addEventListener('blur',()=>keys.clear());

@@ -16,6 +16,10 @@ Traditional Chinese / English interactive Three.js warehouse, based on the suppl
 
 Click and drag to orbit, scroll to zoom, right-drag to pan. Manual walking uses WASD/arrows, drag to look, E for a nearby door and Escape to exit. Mobile provides touch controls.
 
+On mobile, walking controls start collapsed into a small bottom bar. Tap **+** to expand; controls hide again after five seconds without input or when you touch the scene. Pause/resume and exit stay accessible during the tour. The exploration menu also hides after choosing a view or five seconds without input.
+
+Tours route around equipment using the same clearance as vehicle yielding. When a passage is blocked, the visitor can step aside and replan. Tour entry selects a clear starting position, and returning forklifts park with their forks clear of the walking aisle.
+
 ## Build
 
 Requires Node.js 22 or newer.
@@ -31,6 +35,7 @@ The build creates `index.html` for GitHub Pages and `ETAK_Warehouse_3D.html` for
 
 ```sh
 npm test
+node test_traffic.cjs
 ```
 
 The browser test uses an installed Microsoft Edge. It checks three forklifts and six working staff, route/wall and closed-door clearance, complete tours at multiple traffic phases, bilingual controls, the promoted tour interface and mobile layout. Set `WAREHOUSE_URL` to test a deployed site. Detailed test output is saved locally in `final-validation.json`.
