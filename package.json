@@ -1,0 +1,17 @@
+{
+  "name": "etak-warehouse-3d",
+  "version": "1.5.0",
+  "description": "ETAK interactive warehouse: automated walking tour, cold storage, CCTV comparison and animated logistics",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test_v5.cjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "esbuild": "^0.28.2",
+    "playwright": "^1.63.0",
+    "three": "^0.181.2"
+  }
+}
