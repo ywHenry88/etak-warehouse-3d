@@ -47,7 +47,7 @@ export function createOperations(ctx){
   if(z<.55&&x>39)return x<41&&z>-.4?0:-1.5;
   if(z>45)return x>39&&x<41&&z<45.3?0:-1.5;
   if(z>=34.95&&z<=35.85&&x>35.2&&x<38)return .25*clamp((35.85-z)/.9,0,1);
-  if(z>19.2&&z<20.65&&((x>20.8&&x<24.3)||(x>34.4&&x<38)))return .25*(z-19.2)/1.45;
+  if(z>19.2&&z<20.65&&((x>20.8&&x<24.3)||(x>32.4&&x<41.6)))return .25*(z-19.2)/1.45;
   if(z>=20.65&&z<35&&((x>32.3&&x<41.8)||(x>1.8&&x<30.6&&(z<31.3||x>15.15))))return .25;
   return 0;
  }
@@ -171,9 +171,9 @@ export function createOperations(ctx){
   }
   [walk.x,walk.z,walk.yaw]=position;walk.pitch=-.025;if(walking)walkCamera();
  }
- function enterWalk(){walking=true;controls.enabled=false;camera.fov=70;camera.updateProjectionMatrix();showInterior();document.body.classList.add('walking');mobileControls.collapse();relocate($('walkStart').value);canvas.focus();}
+ function enterWalk(){walking=true;controls.enabled=false;camera.fov=90;camera.updateProjectionMatrix();showInterior();document.body.classList.add('walking');mobileControls.collapse();relocate($('walkStart').value);canvas.focus();}
  function exitWalk(){walking=false;keys.clear();intent.x=intent.z=0;tour.stop();lookDrag=false;document.body.classList.remove('walking');controls.enabled=true;}
- function walkMove(forward,side,dt){const speed=10.0;const dx=(Math.sin(walk.yaw)*forward-Math.cos(walk.yaw)*side)*speed*dt,dz=(Math.cos(walk.yaw)*forward+Math.sin(walk.yaw)*side)*speed*dt;const steps=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.08));for(let i=0;i<steps;i++){if(canWalk(walk.x+dx/steps,walk.z))walk.x+=dx/steps;if(canWalk(walk.x,walk.z+dz/steps))walk.z+=dz/steps;}walkCamera();}
+ function walkMove(forward,side,dt){const speed=8.0;const dx=(Math.sin(walk.yaw)*forward-Math.cos(walk.yaw)*side)*speed*dt,dz=(Math.cos(walk.yaw)*forward+Math.sin(walk.yaw)*side)*speed*dt;const steps=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.08));for(let i=0;i<steps;i++){if(canWalk(walk.x+dx/steps,walk.z))walk.x+=dx/steps;if(canWalk(walk.x,walk.z+dz/steps))walk.z+=dz/steps;}walkCamera();}
  // A refuge must be off nearby equipment routes, not merely clear this instant.
  function canYield(x,z){
   if(Math.hypot(x-walk.x,z-walk.z)<1)return false;
@@ -188,12 +188,29 @@ export function createOperations(ctx){
   return true;
  }
  function canStep(x,z,a,b){
+  // Check the complete segment, including tiny grazes at obstacle corners.
+  // Point samples alone miss these and can repeatedly replan the same blocked shortcut.
+  const intersects=(x,z,a,b,r,pad=0)=>{
+   let lo=0,hi=1;
+   for(const [start,delta,min,max] of [[x,a-x,r.x0-pad,r.x1+pad],[z,b-z,r.z0-pad,r.z1+pad]]){
+    if(Math.abs(delta)<1e-10){if(start<=min||start>=max)return false;continue;}
+    let t0=(min-start)/delta,t1=(max-start)/delta;if(t0>t1)[t0,t1]=[t1,t0];lo=Math.max(lo,t0);hi=Math.min(hi,t1);if(lo>=hi)return false;
+   }
+   return lo<hi;
+  };
+  if(staticWalls.some(r=>intersects(x,z,a,b,r,.24))||columnRects.some(r=>intersects(x,z,a,b,r,.1))||storageFootprints.some(r=>intersects(x,z,a,b,r,.26))||truckObstacles.some(r=>intersects(x,z,a,b,r,.23)))return false;
+  for(const f of [...forklifts,...staff]){
+   const sin=Math.sin(f.g.rotation.y),cos=Math.cos(f.g.rotation.y),pad=.26*(Math.abs(sin)+Math.abs(cos));
+   const local=(px,pz)=>{const dx=px-f.g.position.x,dz=pz-f.g.position.z;return [cos*dx-sin*dz,sin*dx+cos*dz];};
+   const [sx,sz]=local(x,z),[ex,ez]=local(a,b);
+   if(intersects(sx,sz,ex,ez,{x0:-.69,x1:.69,z0:-1.3,z1:2.3},pad))return false;
+  }
   // A diagonal can cut across the lowered apron even when both ends are level.
   const n=Math.max(1,Math.ceil(Math.hypot(a-x,b-z)/.03));let height=floorHeight(x,z);
   for(let i=1;i<=n;i++){const next=floorHeight(x+(a-x)*i/n,z+(b-z)*i/n);if(Math.abs(next-height)>=.20)return false;height=next;}
   return true;
  }
- const tour=createTour({walk,canPlan,canYield,canStep,moveTo:(x,z)=>{if(!canWalk(x,z))return false;walk.x=x;walk.z=z;walkCamera();return true;},face:(yaw,dt)=>{const delta=Math.atan2(Math.sin(yaw-walk.yaw),Math.cos(yaw-walk.yaw));walk.yaw+=delta*Math.min(1,dt*5);walkCamera();},begin:()=>{setView('walk');ctx.resumeSimulation?.();relocate('south');doors.forEach(d=>d.mode='auto');},doorRequest:p=>{intent.x=p.x-walk.x;intent.z=p.z-walk.z;},tr});
+ const tour=createTour({walk,canPlan,canYield,canStep,moveTo:(x,z)=>{if(!canWalk(x,z))return false;walk.x=x;walk.z=z;walkCamera();return true;},face:(yaw,dt)=>{const delta=Math.atan2(Math.sin(yaw-walk.yaw),Math.cos(yaw-walk.yaw));walk.yaw+=clamp(delta*(1-Math.exp(-dt*3.5)),-dt*2.2,dt*2.2);walkCamera();},begin:()=>{setView('walk');ctx.resumeSimulation?.();relocate('south');doors.forEach(d=>d.mode='auto');},doorRequest:p=>{intent.x=p.x-walk.x;intent.z=p.z-walk.z;},tr});
  const mobileControls=createMobileControls({tr,toggleTour:()=>tour.toggle(),onLanguage});
  $('exitWalk').onclick=()=>setView('overview');$('walkStart').onchange=()=>{tour.stop();relocate($('walkStart').value);};
  window.addEventListener('keydown',e=>{if(!walking||['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;if(e.code==='Escape'){setView('overview');return;}if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)){e.preventDefault();keys.add(e.code);}if(e.code==='KeyE'){const d=doors.filter(d=>Math.hypot(d.x-walk.x,d.z-walk.z)<5).sort((a,b)=>Math.hypot(a.x-walk.x,a.z-walk.z)-Math.hypot(b.x-walk.x,b.z-walk.z))[0];if(d)setDoorMode(d.id,d.mode==='open'?'closed':'open');}});

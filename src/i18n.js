@@ -1,7 +1,8 @@
 export let language='zh-Hant';
 const zh={
+ 'NORTH DISPATCH · W3':'北面出貨區 · W3','North dispatch door':'北面出貨區門','W2 · CHILLED / 4–10°C':'W2 · 冷藏區 / 4–10°C','W6 · CHILLED / 4–10°C':'W6 · 冷藏區 / 4–10°C','Open connection to W6':'開放連通 W6','Open connection to W2':'開放連通 W2','W2 chilled area, north':'W2 冷藏區北端','W2 chilled area, south':'W2 冷藏區南端',
  'Show walking controls':'展開步行控制','Hide walking controls':'收合步行控制','Stepping aside for traffic':'移至旁邊讓車先行',
- 'One click · 14 stops · 5× walking speed':'一鍵啟動 · 14個景點 · 5倍步行速度','VIEWPOINTS':'選擇視角','DISPLAY OPTIONS':'顯示選項',
+ 'One click · 14 stops · 4× walking speed':'一鍵啟動 · 14個景點 · 4倍步行速度','VIEWPOINTS':'選擇視角','DISPLAY OPTIONS':'顯示選項',
  'Start auto tour':'開始自動導覽','Pause tour':'暫停導覽','Resume tour':'繼續導覽','Stop tour':'停止導覽','Auto tour · whole warehouse':'自動導覽 · 全倉巡覽','Auto walking':'自動步行中','Waiting for clear route':'等候通道暢通','Waiting for door or traffic':'等候開門或讓路','Tour complete':'全倉導覽完成','Southwest staging':'西南面作業區','Indoor truck apron':'室內貨車停泊區','North freezer cross aisle':'北面冷凍庫橫向通道','NORTH FROZEN / −18°C':'北面冷凍庫 / −18°C','−18°C / insulated frozen storage':'−18°C / 保溫冷凍儲存區',
 
  'ETAK · Warehouse in motion':'ETAK · 倉庫動態模型','LOGISTICS / SPATIAL STUDY':'物流倉庫 / 空間模型','ATL · A1 EAST / PHOTO-MATCHED':'亞洲貨櫃物流中心 · A1東翼 / 實景重建','LIVE SIMULATION':'動態模擬','Controls':'控制選單',

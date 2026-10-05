@@ -76,17 +76,18 @@ box(world,M.white,29.85,1.65,3.4,4.3,3.3,.13);box(world,M.white,32,1.65,2.7,.12,
 const columnRects=[];
 for(let x of [16.0,31.25])for(let z of [8.95,20.6,31.4,43.1]){const w=2.05,d=z===8.95?2.55:2.25;box(world,M.wall,x,3.65,z,w,7.3,d);columnRects.push({x0:x-w/2-.25,x1:x+w/2+.25,z0:z-d/2-.25,z1:z+d/2+.25});box(world,M.yellow,x,.32,z,w+.10,.65,d+.1);for(let k=-2;k<=2;k++){const s=box(world,M.dark,x+k*.35,.34,z+d/2+.061,.14,.58,.02);s.rotation.z=-.45;}sign(world,`P${x<20?'1':'2'} / ${Math.round(z)}`,x,2.5,z+d/2+.06,1.7,.32);}
 for(let z of [31.4,43.1])box(world,M.wall,.9,3.65,z,1.7,7.3,2.2);
-// The detailed plan has an L-shaped freezer, a separate chilled room and two east lobbies.
+// W3 is the north dispatch lobby. W2 and W6 form an open chilled suite.
 box(world,M.cold,15.9,.13,26.0,28.8,.25,10.55);
 box(world,M.cold,22.9,.13,33.0,15.0,.25,3.9);
 box(world,M.cold,36.95,.13,27.7,9.4,.25,13.9);
+box(world,M.cold,36,.012,16.3,11.5,.02,8.65);
 const wallSegments=[];
 function wallRun(x1,z1,x2,z2,height=3.3){const dx=x2-x1,dz=z2-z1,len=Math.hypot(dx,dz);const g=new THREE.Group();g.position.set((x1+x2)/2,0,(z1+z2)/2);g.rotation.y=-Math.atan2(dz,dx);world.add(g);box(g,M.insulated,0,height/2,0,len,height,.15);box(g,M.dark,0,.38,.085,len,.55,.025);box(g,M.yellow,0,.10,.11,len,.15,.10);for(let x=-len/2+.9;x<len/2;x+=1.15)box(g,M.steel,x,height/2,.082,.012,height,.008);const upper=new THREE.Group();upper.position.copy(g.position);upper.rotation.copy(g.rotation);upperWalls.add(upper);box(upper,M.insulated,0,(height+6.65)/2,0,len,6.65-height,.15);wallSegments.push({x1,z1,x2,z2});}
-for(const [a,b] of [[1.8,20.8],[24.3,30.6],[32.2,34.4],[38,41.8]])wallRun(a,20.65,b,20.65);
+for(const [a,b] of [[1.8,20.8],[24.3,30.6]])wallRun(a,20.65,b,20.65);
 wallRun(1.8,20.65,1.8,31.3);wallRun(1.8,31.3,15.15,31.3);wallRun(15.15,31.3,15.15,35.0);
 wallRun(15.15,35,30.6,35);wallRun(30.6,20.65,30.6,27.8);wallRun(30.6,30.6,30.6,35);
 wallRun(32.3,20.65,32.3,28.0);wallRun(32.3,30.8,32.3,35);wallRun(32.3,35,35.2,35);wallRun(38,35,41.8,35);
-wallRun(41.8,12,41.8,35);wallRun(30.1,12.5,30.1,20.2);wallRun(39.4,12.4,39.4,20.2);
+wallRun(41.8,12,41.8,35);wallRun(30.1,12.5,30.1,20.2);
 wallRun(41.8,.55,41.8,1.4);wallRun(41.8,8.6,41.8,12);
 wallRun(32.25,35,32.25,38.15);wallRun(32.25,41.65,32.25,45);
 // Steel sliding doors, blue fast-action curtains and protected thresholds from CCTV.
@@ -105,14 +106,17 @@ function rapidDoor(id,x,z,w,ry,title,base=0){
  const lamp=box(g,M.green,w/2+.27,2.0,.15,.13,.22,.07);
  const d={id,x,z,w,ry,title,base,g,leaf,lamp,fraction:0,mode:'auto',safety:false};doors.push(d);return d;
 }
-rapidDoor('chilled-north',36.2,20.65,3.6,0,'Chilled north door',.25);
+// The W2–W6 ramp is open across the room; no invented rapid door or divider.
 rapidDoor('chilled-south',36.6,35,2.8,0,'Chilled south door',.25);
 rapidDoor('frozen-link',22.55,20.65,3.5,0,'Frozen link door',.25);
 rapidDoor('cold-link',31.45,29.3,2.8,Math.PI/2,'Cold-room connecting door',.25);
-rapidDoor('north',41.8,5.0,7.2,Math.PI/2,'North freezer door');
+rapidDoor('north',41.8,5.0,7.2,Math.PI/2,'North dispatch door');
 rapidDoor('south',32.25,39.9,3.5,Math.PI/2,'South dispatch door');
 
-for(const [x,z] of [[22.55,19.94],[36.2,19.94],[36.6,35.7]]){const r=box(world,M.steel,x,.12,z,3.3,.055,1.5);r.rotation.x=z>30?.165:-.165;}
+for(const [x,z] of [[22.55,19.94],[36.6,35.7]]){const r=box(world,M.steel,x,.12,z,3.3,.055,1.5);r.rotation.x=z>30?.165:-.165;}
+const chilledRamp=box(world,M.cold,37.0,.105,19.925,9.2,.04,Math.hypot(1.45,.25));chilledRamp.rotation.x=-Math.atan2(.25,1.45);
+sign(world,'W2 · CHILLED / 4–10°C',41.69,3.9,16.2,5.6,.5,-Math.PI/2,'#356777');
+sign(world,'W6 · CHILLED / 4–10°C',41.69,3.9,27.7,5.6,.5,-Math.PI/2,'#356777');
 for(let x of [7.5,19.5,26.5,34.0,40.4]){const z=x<30?21.15:27.3;const g=new THREE.Group();g.position.set(x,5.55,z);world.add(g);box(g,M.white,0,0,0,2.4,.8,.64);for(let k of [-.65,.65]){const fan=cylinder(g,M.dark,k,0,.36,.25,.045);fan.rotation.x=Math.PI/2;for(let j=0;j<8;j++){const blade=box(g,M.steel,k,0,.392,.40,.03,.014);blade.rotation.z=j*Math.PI/4;}}}
 sign(world,'FROZEN  /  −18°C',24,3.6,20.7,5.5,.5,0,'#356777');sign(world,'CHILLED  /  4–10°C',36.6,4.7,20.7,5.7,.5,0,'#356777');
 
@@ -149,7 +153,7 @@ rackBlock(.3,3.2,24.5,27.4,'z');rackBlock(3.6,13.7,27.9,31.0);
 rackBlock(17.2,30.4,31.5,34.6);rackBlock(17.2,30.3,35.5,38.45,'x',0);rackBlock(17.2,28.7,41.65,44.65,'x',0);
 // Perimeter shelving evidenced by C05/C06 and C09/C10, kept off their central aisle.
 rackBlock(32.45,33.75,23.0,34.65,'z');rackBlock(40.25,41.55,23.0,34.65,'z');
-rackBlock(30.9,32.15,12.5,19.7,'z',0);rackBlock(38.1,39.3,12.5,19.7,'z',0);
+rackBlock(30.9,32.15,12.5,18.9,'z',0);rackBlock(40.25,41.55,12.5,18.9,'z',0);
 // North hall: deep north–south floor-pallet lanes, divided by the C11/C12 cross aisle.
 function floorGrid(x0,x1,z0,z1){for(let x=x0+.6;x<x1-.45;x+=1.30)for(let z=z0+.57;z<z1-.43;z+=1.25){if(inColumn(x,z,1.18,1.08))continue;floorSlots.push({x,y:0,z,id:'F'+floorSlots.length,zone:'block',level:0});}}
 floorGrid(4.75,29.9,.45,10.65);floorGrid(1.9,29.9,13.25,20.25);floorGrid(30.2,32.2,3.35,10.65);
@@ -239,7 +243,7 @@ const staticBatches=new Map();for(const obj of [...world.children]){if(!obj.isMe
 let instanceTotal=0;for(const [material,items] of batches){const mesh=new THREE.InstancedMesh(boxGeo,material,items.length);items.forEach(([x,y,z,sx,sy,sz,ry],i)=>{dummy.position.set(x,y,z);dummy.rotation.set(0,ry,0);dummy.scale.set(sx,sy,sz);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);});mesh.castShadow=true;mesh.receiveShadow=true;mesh.computeBoundingSphere();world.add(mesh);instanceTotal+=items.length;}
 
 const labelEntries=[];function htmlLabel(text,sub,x,y,z){const e=document.createElement('div');e.className='label';e.innerHTML=tr(text)+(sub?'<small>'+tr(sub)+'</small>':'');$('labels').append(e);labelEntries.push({e,text,sub,v:new THREE.Vector3(x-21,y,z-22.5)});}
-htmlLabel('NORTH FROZEN / −18°C','−18°C / insulated frozen storage',18,5.8,6);htmlLabel('FROZEN','−18°C / mapped rack blocks',18,5.8,28);htmlLabel('CHILLED','4–10°C / perimeter racks',36.8,5.8,27);htmlLabel('SOUTH RACK AISLE','C01 ↔ C02',24,6.5,39.8);htmlLabel('NORTH DISPATCH','Clear rapid-door lobby',39,4,8);htmlLabel('SOUTH DISPATCH','Clear loading area',37.5,4,43);htmlLabel('INDOOR TRUCK APRON','Pavement −1.50 m',54,2.5,23);
+htmlLabel('NORTH FROZEN / −18°C','−18°C / insulated frozen storage',18,5.8,6);htmlLabel('FROZEN','−18°C / mapped rack blocks',18,5.8,28);htmlLabel('W6 · CHILLED / 4–10°C','Open connection to W2',36.8,5.8,27);htmlLabel('SOUTH RACK AISLE','C01 ↔ C02',24,6.5,39.8);htmlLabel('NORTH DISPATCH · W3','Clear rapid-door lobby',38.6,4,5.4);htmlLabel('W2 · CHILLED / 4–10°C','Open connection to W6',36.0,4.7,16.0);htmlLabel('SOUTH DISPATCH','Clear loading area',37.5,4,43);htmlLabel('INDOOR TRUCK APRON','Pavement −1.50 m',54,2.5,23);
 htmlLabel('NORTH STAFF RAMP','C16 / pedestrian access',48,1.8,-.55);htmlLabel('SOUTH STAFF RAMP','C17 / pedestrian access',48,1.8,46.1);
 const views={overview:{pos:[76,65,83],target:[6,0,0]},plan:{pos:[4,104,.01],target:[4,0,0]},dock:{pos:[62,29,26],target:[21,1,0]},inside:{pos:[-3.3,4.1,17.3],target:[10,1.6,17.3]}};
 let currentView='overview',transition=null,paused=false,speed=1,simTime=0,lastStamp=null,labelsOn=innerWidth>=700;
@@ -275,7 +279,7 @@ const tv=new THREE.Vector3();let tick=0;
 function renderAt(t,dt=0){ops.update(t,dt);if(transition){transition.t=Math.min(1,transition.t+dt/1.3);const k=transition.t*transition.t*(3-2*transition.t);camera.position.lerpVectors(transition.startPos,transition.endPos,k);controls.target.lerpVectors(transition.startTarget,transition.endTarget,k);if(transition.t===1)transition=null;}if(currentView==='follow'){const f=forklifts[0];tv.set(f.g.position.x-21,1.7,f.g.position.z-22.5);controls.target.lerp(tv,.08);tv.add(new THREE.Vector3(0,18,2.5));camera.position.lerp(tv,.045);}if(currentView!=='walk')controls.update();if(labelsOn){labelEntries.forEach(({e,v})=>{tv.copy(v).project(camera);e.style.left=(tv.x*.5+.5)*innerWidth+'px';e.style.top=(-tv.y*.5+.5)*innerHeight+'px';e.style.display=tv.z>1||tv.z<0||currentView==='walk'||currentView==='inside'||currentView==='follow'||currentView.startsWith('C')?'none':'';});}composer.render();if(tick++%15===0){$('activities').innerHTML=forklifts.map((f,i)=>`<div class="activity"><span>FL-0${i+1}</span><em>${tr(f.phase)}</em></div>`).join('')+ops.staffStatus();ops.refreshDoorUI();$('simTime').textContent=String(Math.floor(t/60)).padStart(2,'0')+':'+String(Math.floor(t%60)).padStart(2,'0')+' · '+tr('Continuous loading cycle');$('loads').textContent=ops.dispatched()+' '+tr('pallets dispatched');}}
 function animate(stamp){const dt=lastStamp===null?0:Math.min((stamp-lastStamp)/1000,.08);lastStamp=stamp;if(!paused)simTime+=dt*speed;renderAt(simTime,dt);requestAnimationFrame(animate);}
 window.addEventListener('hf-seek',e=>{paused=true;simTime=e.detail.time;renderAt(simTime);});
-window.warehouse={ready:false,setView,selectCamera,setLanguage,operations:ops,seek(t){paused=true;simTime=t;tick=0;renderAt(t);},resume(){paused=false;},sampleFleet(t){ops.seek(t);return forklifts.map(f=>({x:f.g.position.x,z:f.g.position.z,heading:f.g.rotation.y,loaded:f.cargo.visible,phase:f.phase}));},getState(){return {staffCount:6,forkliftCount:forklifts.length,walkingSpeed:10,tourSpeed:8.25,parkingColumns:0,brandBanner:true,language,doors:ops.doorState(),staff:ops.staffState(),ramps:ops.ramps,walking:ops.walkState(),time:simTime,paused,speed,view:currentView,stocked,slots:slots.length,bays:bayID,rackZoneArea:rawZoneArea,usableStorageArea,rackAllocation:rawZoneArea/usableStorageArea,apronLevel:-1.5,trailerBedLevel:0,rackFootprints,dockRects,columnRects,routes,storageFootprints,groundPositions:floorSlots.length,cameraCount:cameraLocations.length,photoCount:Object.values(cameraPhotos).reduce((a,b)=>a+b.length,0),cameraData:cameraLocations,wallSegments,vehicles:forklifts.map(f=>({x:f.g.position.x,z:f.g.position.z,loaded:f.cargo.visible,phase:f.phase})),instanceTotal};}};
+window.warehouse={ready:false,setView,selectCamera,setLanguage,operations:ops,seek(t){paused=true;simTime=t;tick=0;renderAt(t);},resume(){paused=false;},sampleFleet(t){ops.seek(t);return forklifts.map(f=>({x:f.g.position.x,z:f.g.position.z,heading:f.g.rotation.y,loaded:f.cargo.visible,phase:f.phase}));},getState(){return {staffCount:6,forkliftCount:forklifts.length,walkingSpeed:8,tourSpeed:6.6,walkingFov:90,openChilledLink:true,parkingColumns:0,brandBanner:true,language,doors:ops.doorState(),staff:ops.staffState(),ramps:ops.ramps,walking:ops.walkState(),time:simTime,paused,speed,view:currentView,stocked,slots:slots.length,bays:bayID,rackZoneArea:rawZoneArea,usableStorageArea,rackAllocation:rawZoneArea/usableStorageArea,apronLevel:-1.5,trailerBedLevel:0,rackFootprints,dockRects,columnRects,routes,storageFootprints,groundPositions:floorSlots.length,cameraCount:cameraLocations.length,photoCount:Object.values(cameraPhotos).reduce((a,b)=>a+b.length,0),cameraData:cameraLocations,wallSegments,vehicles:forklifts.map(f=>({x:f.g.position.x,z:f.g.position.z,loaded:f.cargo.visible,phase:f.phase})),instanceTotal};}};
 onLanguage(()=>{
  signRecords.forEach(({material,text,bg})=>{material.map.dispose();material.map=labelTexture(tr(text),bg);material.needsUpdate=true;});
  labelEntries.forEach(({e,text,sub})=>e.innerHTML=tr(text)+(sub?'<small>'+tr(sub)+'</small>':''));
