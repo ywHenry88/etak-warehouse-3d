@@ -1,10 +1,47 @@
 // A* plans against the model's actual walls, stock, door apertures and floor levels.
 export function createTour({walk,canPlan,canYield,canStep,moveTo,face,begin,doorRequest,tr}){
- const stops=[['Northwest empty area',6.5,2],['Northwest cross aisle',4.05,11.6],['North freezer',18.5,11.6],['W2 chilled area, north',36.2,16.5],['Chilled room, north',36.4,24.9],['Frozen room, east',26.6,27.0],['Chilled room, south',36.4,32.8],['South rack aisle',27.8,39.95],['Southwest staging',9,39.7],['South dispatch entrance',39.5,40],['South ramp / C17',40.7,46.1],['Indoor truck apron',57,24],['North ramp / C16',40.7,-.55],['North dispatch lobby',38.6,5.1]];
+ // Ordered checkpoints trace the user's red line; aisle return legs are intentional.
+ const stops=[
+  ['Red route start',1.5,38.2],
+  ['Southwest staging',12,39.7],
+  ['South rack aisle',27.8,39.95],
+  ['South dispatch entrance',35.4,39.9],
+  ['South loading area',39.5,39.5],
+  ['South personnel exit',40.7,46.1],
+  ['South ramp / C17',54.6,46.1],
+  ['Truck apron, south outward',57,45.5],
+  ['Indoor truck apron',57,24],
+  ['North apron outward',57,-.55],
+  ['North ramp / C16',40.7,-.55],
+  ['North dispatch lobby',39,4],
+  ['W3 loading dock',36.2,8],
+  ['W2 / W3 rapid door',36.2,11.6],
+  ['W2 / W1 rapid door',29,11.6],
+  ['North freezer cross aisle',18.5,11.6],
+  ['North freezer turnaround',5,11.6],
+  ['North freezer return aisle',27.5,11.6],
+  ['W2 chilled area, north',36.2,16.5],
+  ['Chilled room, north',36.4,24.9],
+  ['Cold room passage',34,29.3],
+  ['Frozen room, east',28.8,29.3],
+  ['Frozen room cross aisle',24,25.5],
+  ['Frozen room turnaround',5.5,25.5],
+  ['Frozen room return aisle',24,27.3],
+  ['Frozen room, east return',28.8,29.3],
+  ['Chilled room, south',36.4,32.8],
+  ['South loading area exit',36.6,36.4],
+  ['Red route end',37.5,39.5]
+ ];
  let active=false,index=1,path=[],pathIndex=0,pause=false,dwell=0,replan=0,status='Start auto tour',visited=[],blocked=0,yielding=false,yields=0;
  const cell=.3,xMin=.3,zMin=-1.5,nx=210,nz=164;
  const point=id=>({x:xMin+(id%nx)*cell,z:zMin+Math.floor(id/nx)*cell});
  const node=(x,z)=>Math.round((z-zMin)/cell)*nx+Math.round((x-xMin)/cell);
+ // Keep traffic detours near this leg instead of routing around other rooms.
+ function routeDistance(x,z){
+  const a=stops[index-1],b=stops[index],dx=b[1]-a[1],dz=b[2]-a[2];
+  const t=Math.max(0,Math.min(1,((x-a[1])*dx+(z-a[2])*dz)/(dx*dx+dz*dz||1)));
+  return Math.hypot(x-a[1]-t*dx,z-a[2]-t*dz);
+ }
  function clearSegment(a,b){
   if(!canStep(a.x,a.z,b.x,b.z))return false;
   const count=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,b.z-a.z)/.06));
@@ -22,8 +59,11 @@ export function createTour({walk,canPlan,canYield,canStep,moveTo,face,begin,door
   return from;
  }
  function plan(target,refuge=false){
+  // A narrow aisle may require backing out to its end to let a forklift pass.
+  // Allow that refuge, then reconnect to the same checkpoint without skipping it.
+  const corridor=Math.max(3,routeDistance(walk.x,walk.z)+.3);
   const start=node(walk.x,walk.z),goal=node(target[1],target[2]),end=point(goal),open=[],cost=new Map([[start,0]]),came=new Map(),closed=new Set(),cache=new Map();
-  const valid=id=>{if(!cache.has(id)){const p=point(id);cache.set(id,canPlan(p.x,p.z));}return cache.get(id);};
+  const valid=id=>{if(!cache.has(id)){const p=point(id);cache.set(id,(refuge||routeDistance(p.x,p.z)<=corridor)&&canPlan(p.x,p.z));}return cache.get(id);};
   const push=(id,f)=>{open.push({id,f});let i=open.length-1;while(i){const p=(i-1)>>1;if(open[p].f<=f)break;[open[p],open[i]]=[open[i],open[p]];i=p;}};
   const pop=()=>{const r=open[0],last=open.pop();if(open.length){open[0]=last;let i=0;while(true){let j=i*2+1;if(j>=open.length)break;if(j+1<open.length&&open[j+1].f<open[j].f)j++;if(open[i].f<=open[j].f)break;[open[i],open[j]]=[open[j],open[i]];i=j;}}return r.id;};
   push(start,0);let reached=null;
@@ -66,7 +106,7 @@ export function createTour({walk,canPlan,canYield,canStep,moveTo,face,begin,door
   if(Math.hypot(look.x-walk.x,look.z-walk.z)>.03)face(Math.atan2(look.x-walk.x,look.z-walk.z),dt);
   doorRequest(p);
   const step=Math.min(dist,6.6*dt),x=walk.x+dx/(dist||1)*step,z=walk.z+dz/(dist||1)*step;
-  if(moveTo(x,z)){blocked=0;status=yielding?'Stepping aside for traffic':'Auto walking';if(step>=dist-1e-7){pathIndex++;if(pathIndex>=path.length){if(yielding){yielding=false;path=[];dwell=1;replan=0;}else{visited.push(stops[index][0]);index++;if(index>=stops.length){active=false;status='Tour complete';refresh();return;}dwell=.4;path=plan(stops[index]);pathIndex=0;}}}}
+  if(moveTo(x,z)){blocked=0;status=yielding?'Stepping aside for traffic':'Auto walking';if(step>=dist-1e-7){pathIndex++;if(pathIndex>=path.length){if(yielding){yielding=false;path=[];dwell=1;replan=0;}else{visited.push(stops[index][0]);index++;if(index>=stops.length){active=false;status='Tour complete';refresh();return;}dwell=0;path=plan(stops[index]);pathIndex=0;}}}}
   else{blocked+=dt;status='Waiting for door or traffic';if(replan<=0)recover();}
   refresh();
  }

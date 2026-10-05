@@ -51,6 +51,7 @@ export function createOperations(ctx){
   if(x>34.1&&x<38.3&&z>8.8&&z<10.4)return .25*clamp((z-8.8)/1.6,0,1);
   if(x>30.1&&x<41.8&&z>=10&&z<20.65)return .25;
   if(z>19.2&&z<20.65&&x>20.8&&x<24.3)return .25*(z-19.2)/1.45;
+  if(x>=30.6&&x<=32.3&&z>=28&&z<=30.6)return .25;
   if(z>=20.65&&z<35&&((x>32.3&&x<41.8)||(x>1.8&&x<30.6&&(z<31.3||x>15.15))))return .25;
   return 0;
  }
@@ -166,7 +167,7 @@ export function createOperations(ctx){
  }
  function walkCamera(){walk.y=floorHeight(walk.x,walk.z);camera.position.set(walk.x-21,walk.y+1.67,walk.z-22.5);camera.lookAt(camera.position.x+Math.sin(walk.yaw)*Math.cos(walk.pitch),camera.position.y+Math.sin(walk.pitch),camera.position.z+Math.cos(walk.yaw)*Math.cos(walk.pitch));camera.updateMatrixWorld();}
  function relocate(place){
-  const p={northwest:[6.5,2,0],south:[27.8,39.95,Math.PI/2],north:[20.5,11.6,Math.PI/2],rampNorth:[40.7,-.55,Math.PI/2],rampSouth:[40.7,46.1,Math.PI/2]}[place]||[27.8,39.95,Math.PI/2];
+  const p={routeStart:[1.5,38.2,Math.PI/2],northwest:[6.5,2,0],south:[27.8,39.95,Math.PI/2],north:[20.5,11.6,Math.PI/2],rampNorth:[40.7,-.55,Math.PI/2],rampSouth:[40.7,46.1,Math.PI/2]}[place]||[27.8,39.95,Math.PI/2];
   let position=p;
   // A tour can start at any traffic phase; never spawn inside a passing vehicle.
   if(!canPlan(p[0],p[1])){
@@ -214,7 +215,7 @@ export function createOperations(ctx){
   for(let i=1;i<=n;i++){const next=floorHeight(x+(a-x)*i/n,z+(b-z)*i/n);if(Math.abs(next-height)>=.20)return false;height=next;}
   return true;
  }
- const tour=createTour({walk,canPlan,canYield,canStep,moveTo:(x,z)=>{if(!canWalk(x,z))return false;walk.x=x;walk.z=z;walkCamera();return true;},face:(yaw,dt)=>{const delta=Math.atan2(Math.sin(yaw-walk.yaw),Math.cos(yaw-walk.yaw));walk.yaw+=clamp(delta*(1-Math.exp(-dt*3.5)),-dt*2.2,dt*2.2);walkCamera();},begin:()=>{setView('walk');ctx.resumeSimulation?.();relocate('northwest');doors.forEach(d=>d.mode='auto');},doorRequest:p=>{intent.x=p.x-walk.x;intent.z=p.z-walk.z;},tr});
+ const tour=createTour({walk,canPlan,canYield,canStep,moveTo:(x,z)=>{if(!canWalk(x,z))return false;walk.x=x;walk.z=z;walkCamera();return true;},face:(yaw,dt)=>{const delta=Math.atan2(Math.sin(yaw-walk.yaw),Math.cos(yaw-walk.yaw));walk.yaw+=clamp(delta*(1-Math.exp(-dt*3.5)),-dt*2.2,dt*2.2);walkCamera();},begin:()=>{setView('walk');ctx.resumeSimulation?.();relocate('routeStart');doors.forEach(d=>d.mode='auto');},doorRequest:p=>{intent.x=p.x-walk.x;intent.z=p.z-walk.z;},tr});
  const mobileControls=createMobileControls({tr,toggleTour:()=>tour.toggle(),onLanguage});
  $('exitWalk').onclick=()=>setView('overview');$('walkStart').onchange=()=>{tour.stop();relocate($('walkStart').value);};
  window.addEventListener('keydown',e=>{if(!walking||['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;if(e.code==='Escape'){setView('overview');return;}if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)){e.preventDefault();keys.add(e.code);}if(e.code==='KeyE'){const d=doors.filter(d=>Math.hypot(d.x-walk.x,d.z-walk.z)<5).sort((a,b)=>Math.hypot(a.x-walk.x,a.z-walk.z)-Math.hypot(b.x-walk.x,b.z-walk.z))[0];if(d)setDoorMode(d.id,d.mode==='open'?'closed':'open');}});

@@ -82,6 +82,8 @@ box(world,M.cold,15.9,.13,26.0,28.8,.25,10.55);
 box(world,M.cold,22.9,.13,33.0,15.0,.25,3.9);
 box(world,M.cold,36.95,.13,27.7,9.4,.25,13.9);
 box(world,M.cold,36.0,.125,15.325,11.6,.25,10.65);
+// A continuous level threshold joins the two raised cold-room floors.
+box(world,M.cold,31.3,.125,29.3,2.2,.25,2.6);
 const wallSegments=[];
 function wallRun(x1,z1,x2,z2,height=3.3){const dx=x2-x1,dz=z2-z1,len=Math.hypot(dx,dz);const g=new THREE.Group();g.position.set((x1+x2)/2,0,(z1+z2)/2);g.rotation.y=-Math.atan2(dz,dx);world.add(g);box(g,M.insulated,0,height/2,0,len,height,.15);box(g,M.dark,0,.38,.085,len,.55,.025);box(g,M.yellow,0,.10,.11,len,.15,.10);for(let x=-len/2+.9;x<len/2;x+=1.15)box(g,M.steel,x,height/2,.082,.012,height,.008);const upper=new THREE.Group();upper.position.copy(g.position);upper.rotation.copy(g.rotation);upperWalls.add(upper);box(upper,M.insulated,0,(height+6.65)/2,0,len,6.65-height,.15);wallSegments.push({x1,z1,x2,z2});}
 for(const [a,b] of [[1.8,20.8],[24.3,30.6]])wallRun(a,20.65,b,20.65);

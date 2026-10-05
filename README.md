@@ -6,7 +6,7 @@ Traditional Chinese / English interactive Three.js warehouse, based on the suppl
 
 ## Explore
 
-- The highlighted **自動導覽 · 全倉巡覽 / Auto tour** button starts in the clear northwest corner, then takes a hands-free, 14-stop tour through storage, dispatch, cold rooms, ramps and the truck apron.
+- The highlighted **自動導覽 · 全倉巡覽 / Auto tour** button follows the supplied red walking route from the southwest Start to the south dispatch End: south aisle → C17 ramp → truck apron → C16 ramp → W3 → W2/W1 doors → north freezer out-and-back → W2/W6 → central freezer out-and-back → south dispatch. Ordered checkpoints preserve both return legs, with smooth camera turns and local detours for traffic.
 - Walking defaults to **4× the earlier version**: manual movement 8 m/s; guided movement 6.6 m/s. Doors and traffic can add waiting time. Pause/resume/stop remain available.
 - **Eight staff and four forklifts** work on independent continuous circuits. Staff walk at 1.65 m/s from randomized starting positions and alternate loaded pallet trucks, empty trucks and walking without equipment. Two forklifts dispatch to trailers and two transfer pallets within W2/W6. Only door and pedestrian clearance can briefly interrupt movement; there are no group-based idle periods.
 - Rapid doors default closed, opening for approaching/passing people or equipment and closing after clearance. Explicit manual Open/Close overrides are available.
