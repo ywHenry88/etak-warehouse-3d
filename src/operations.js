@@ -210,7 +210,7 @@ export function createOperations(ctx){
   for(let i=1;i<=n;i++){const next=floorHeight(x+(a-x)*i/n,z+(b-z)*i/n);if(Math.abs(next-height)>=.20)return false;height=next;}
   return true;
  }
- const tour=createTour({walk,canPlan,canYield,canStep,
+ const tour=createTour({walk,canPlan,canYield,canStep,onStateChange:ctx.onTourState,
   moveTo:(x,z)=>{if(!canWalk(x,z))return false;walk.x=x;walk.z=z;walkCamera();return true;},
   face:(yaw,dt)=>{const delta=Math.atan2(Math.sin(yaw-walk.yaw),Math.cos(yaw-walk.yaw));walk.yaw+=clamp(delta*(1-Math.exp(-dt*3.5)),-dt*2.2,dt*2.2);walkCamera();},
   begin:next=>{

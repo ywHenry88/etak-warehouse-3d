@@ -1,5 +1,5 @@
 // A* plans against the model's actual walls, stock, door apertures and floor levels.
-export function createTour({walk,canPlan,canYield,canStep,moveTo,face,begin,enterRoute,advanceFlight,finishRoute,complete,cancel,doorRequest,tr}){
+export function createTour({walk,canPlan,canYield,canStep,moveTo,face,begin,enterRoute,advanceFlight,finishRoute,complete,cancel,doorRequest,tr,onStateChange}){
  // Ordered checkpoints trace the user's red line; aisle return legs are intentional.
  const stops=[
   ['Red route start',1.5,38.2],
@@ -88,6 +88,8 @@ export function createTour({walk,canPlan,canYield,canStep,moveTo,face,begin,ente
  }
  function refresh(){
   const action=active?(pause?'Resume tour':'Pause tour'):'Start auto tour';
+  const shortcut=document.getElementById('headerTour');shortcut.textContent=active&&!pause?'Ⅱ':'▶';shortcut.setAttribute('aria-label',tr(action));shortcut.title=tr(action);shortcut.setAttribute('aria-pressed',String(active&&!pause));shortcut.classList.toggle('active',active);
+  onStateChange?.(active,pause);
   const compact=document.getElementById('compactPause');compact.textContent=pause?'▶':'Ⅱ';compact.setAttribute('aria-label',tr(action));
   document.body.classList.toggle('touring',active);
   document.body.classList.toggle('tour-flying',active&&(phase==='intro'||phase==='outro'));

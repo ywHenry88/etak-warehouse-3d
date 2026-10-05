@@ -6,6 +6,8 @@ Traditional Chinese / English interactive Three.js warehouse, based on the suppl
 
 ## Explore
 
+- The gold play arrow immediately before **Controls** starts or pauses the auto tour. The globe at the upper right switches between Traditional Chinese (default) and English.
+- Auto tours play an original, energetic **124 BPM electronic instrumental** with drums, bass, chord stabs and a melodic synth. Nearby rapid doors make a short motor/air opening sound; music briefly ducks for clarity. The speaker button mutes both. Audio starts after a user click and pauses with the tour, when the tab is hidden, or when the tour ends. Web Audio synthesis needs no downloads and works in the offline HTML.
 - Auto tour opens at **03 · Loading docks**, holds briefly, then flies above the warehouse and descends at the existing red-route Start. After all 29 checkpoints it flies back to the same Loading docks view. Pause/resume, stop and viewpoint changes also work during both flights; mobile controls remain compact.
 - The highlighted **自動導覽 · 全倉巡覽 / Auto tour** button follows the supplied red walking route from the southwest Start to the south dispatch End: south aisle → C17 ramp → truck apron → C16 ramp → W3 → W2/W1 doors → north freezer out-and-back → W2/W6 → central freezer out-and-back → south dispatch. Ordered checkpoints preserve both return legs, with smooth camera turns and local detours for traffic.
 - Walking defaults to **4× the earlier version**: manual movement 8 m/s; guided movement 6.6 m/s. Doors and traffic can add waiting time. Pause/resume/stop remain available.
@@ -49,6 +51,7 @@ node test_actors.cjs
 node test_cold_mist.cjs
 node test_performance.cjs
 node test_tour_flight.cjs
+node test_tour_audio.cjs
 ```
 
 The current browser test uses an installed Microsoft Edge. It checks four forklifts and eight staff, randomized starts, mixed pallet-truck use, continuous work, route/wall and closed-door clearance, tours at multiple traffic phases, W2/W6 levels, both new doors, rack-free W3 and the compact mobile controls. Set `WAREHOUSE_URL` to test a deployed site. Detailed output is saved locally in `final-validation.json`. Earlier version-specific tests have been superseded by `test_v8.cjs`.
