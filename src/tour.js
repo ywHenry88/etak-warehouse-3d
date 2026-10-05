@@ -1,6 +1,6 @@
 // A* plans against the model's actual walls, stock, door apertures and floor levels.
 export function createTour({walk,canPlan,canYield,canStep,moveTo,face,begin,doorRequest,tr}){
- const stops=[['South rack aisle',27.8,39.95],['Southwest staging',9,39.7],['South dispatch entrance',39.5,40],['South ramp / C17',40.7,46.1],['Indoor truck apron',57,24],['North ramp / C16',40.7,-.55],['North dispatch lobby',38.6,5.1],['North freezer',25,11.6],['North freezer cross aisle',18.5,11.6],['W2 chilled area, north',36.2,16.5],['Chilled room, north',36.4,24.9],['Frozen room, east',26.6,27.0],['Chilled room, south',36.4,32.8],['South rack aisle',27.8,39.95]];
+ const stops=[['Northwest empty area',6.5,2],['Northwest cross aisle',4.05,11.6],['North freezer',18.5,11.6],['W2 chilled area, north',36.2,16.5],['Chilled room, north',36.4,24.9],['Frozen room, east',26.6,27.0],['Chilled room, south',36.4,32.8],['South rack aisle',27.8,39.95],['Southwest staging',9,39.7],['South dispatch entrance',39.5,40],['South ramp / C17',40.7,46.1],['Indoor truck apron',57,24],['North ramp / C16',40.7,-.55],['North dispatch lobby',38.6,5.1]];
  let active=false,index=1,path=[],pathIndex=0,pause=false,dwell=0,replan=0,status='Start auto tour',visited=[],blocked=0,yielding=false,yields=0;
  const cell=.3,xMin=.3,zMin=-1.5,nx=210,nz=164;
  const point=id=>({x:xMin+(id%nx)*cell,z:zMin+Math.floor(id/nx)*cell});
@@ -57,7 +57,7 @@ export function createTour({walk,canPlan,canYield,canStep,moveTo,face,begin,door
  function recover(){
   const next=plan(stops[index]);
   if(next.length){path=next;pathIndex=0;yielding=false;}
-  else if(blocked>=1.5){const refuge=plan(stops[index],true);if(refuge.length){path=refuge;pathIndex=0;yielding=true;yields++;blocked=0;}}
+  if(blocked>=1.5){const refuge=plan(stops[index],true);if(refuge.length){path=refuge;pathIndex=0;yielding=true;yields++;blocked=0;}}
   replan=1;
  }
  function update(dt){if(!active||pause)return;replan-=dt;if(dwell>0){dwell-=dt;doorRequest(walk);return;}

@@ -1,5 +1,6 @@
 export let language='zh-Hant';
 const zh={
+ 'Northwest empty area':'西北面空置區','Northwest cross aisle':'西北面橫向通道','Walking to next task':'步行前往工作位置','W2 / W3 rapid door':'W2／W3 快速門','W2 / W1 rapid door':'W2／W1 快速門','W3 / LOADING DOCK':'W3／上落貨區',
  'NORTH DISPATCH · W3':'北面出貨區 · W3','North dispatch door':'北面出貨區門','W2 · CHILLED / 4–10°C':'W2 · 冷藏區 / 4–10°C','W6 · CHILLED / 4–10°C':'W6 · 冷藏區 / 4–10°C','Open connection to W6':'開放連通 W6','Open connection to W2':'開放連通 W2','W2 chilled area, north':'W2 冷藏區北端','W2 chilled area, south':'W2 冷藏區南端',
  'Show walking controls':'展開步行控制','Hide walking controls':'收合步行控制','Stepping aside for traffic':'移至旁邊讓車先行',
  'One click · 14 stops · 4× walking speed':'一鍵啟動 · 14個景點 · 4倍步行速度','VIEWPOINTS':'選擇視角','DISPLAY OPTIONS':'顯示選項',

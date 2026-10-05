@@ -6,12 +6,13 @@ Traditional Chinese / English interactive Three.js warehouse, based on the suppl
 
 ## Explore
 
-- The highlighted **自動導覽 · 全倉巡覽 / Auto tour** button starts a hands-free, 14-stop tour through storage, dispatch, cold rooms, ramps and the truck apron.
+- The highlighted **自動導覽 · 全倉巡覽 / Auto tour** button starts in the clear northwest corner, then takes a hands-free, 14-stop tour through storage, dispatch, cold rooms, ramps and the truck apron.
 - Walking defaults to **4× the earlier version**: manual movement 8 m/s; guided movement 6.6 m/s. Doors and traffic can add waiting time. Pause/resume/stop remain available.
-- **Six staff** walk and work with pallet trucks; **three forklifts** pick, carry and load goods. Four staff circulate in separate work zones while two handle trailer dispatch.
+- **Eight staff and four forklifts** work on independent continuous circuits. Staff walk at 1.65 m/s from randomized starting positions and alternate loaded pallet trucks, empty trucks and walking without equipment. Two forklifts dispatch to trailers and two transfer pallets within W2/W6. Only door and pedestrian clearance can briefly interrupt movement; there are no group-based idle periods.
 - Rapid doors default closed, opening for approaching/passing people or equipment and closing after clearance. Explicit manual Open/Close overrides are available.
 - The north frozen zone is marked **−18°C**, with insulated panels, cold-room equipment and organized storage. Truck pavement is 1.5 m below the warehouse; trailer beds align with the loading floor.
-- North dispatch is confined to **W3**. **W2 and W6 are chilled (4–10°C)** and connect through an open ramp, with no dividing rapid door or wall across that link.
+- **W3** is a rack-free loading room with protected walls and a stainless bench, informed by C13/C14. **W2 and W6 are chilled (4–10°C)** with the same +0.25 m floor and an open connection. Automatic rapid doors separate W2/W3 and W2/W1; short transitions are at those boundaries, not between W2/W6.
+- Subtle animated white condensation plumes are confined to the −18°C rooms. The floor/trailer level information panel has been removed.
 - The supplied ETAK banner is mounted on the central wall facing the truck apron. The five foreground parking columns have been removed for visibility.
 - 27 camera views include 25 reference images for 24 cameras. C04/C07/C08 have plan locations only; C14 has two reference images.
 
@@ -19,7 +20,7 @@ Click and drag to orbit, scroll to zoom, right-drag to pan. Manual walking uses 
 
 On mobile, walking controls start collapsed into a small bottom bar. Tap **+** to expand; controls hide again after five seconds without input or when you touch the scene. Pause/resume and exit stay accessible during the tour. The exploration menu also hides after choosing a view or five seconds without input.
 
-Tours route around equipment using the same clearance as vehicle yielding. When a passage is blocked, the visitor can step aside and replan. Tour entry selects a clear starting position, and returning forklifts park with their forks clear of the walking aisle.
+Tours route around equipment using the same clearance as vehicle yielding. When a passage is blocked, the visitor can step aside and replan. Equipment stays on continuous circuits rather than parking across aisles.
 
 Walking uses a 90° vertical field of view. Guided routes merge clear straight sections of the navigation grid, with a forward-looking camera and gradual turns to remove left/right oscillation on the truck apron. Every shortcut is checked against walls, storage, equipment and floor-level changes.
 
@@ -38,11 +39,10 @@ The build creates `index.html` for GitHub Pages and `ETAK_Warehouse_3D.html` for
 
 ```sh
 npm test
-node test_traffic.cjs
-node test_layout_walk.cjs
+node test_v8_random.cjs
 ```
 
-The browser test uses an installed Microsoft Edge. It checks three forklifts and six working staff, route/wall and closed-door clearance, complete tours at multiple traffic phases, bilingual controls, the promoted tour interface and mobile layout. Set `WAREHOUSE_URL` to test a deployed site. Detailed test output is saved locally in `final-validation.json`.
+The current browser test uses an installed Microsoft Edge. It checks four forklifts and eight staff, randomized starts, mixed pallet-truck use, continuous work, route/wall and closed-door clearance, tours at multiple traffic phases, W2/W6 levels, both new doors, rack-free W3 and the compact mobile controls. Set `WAREHOUSE_URL` to test a deployed site. Detailed output is saved locally in `final-validation.json`. Earlier version-specific tests have been superseded by `test_v8.cjs`.
 
 ## Model interpretation
 

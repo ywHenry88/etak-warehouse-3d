@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import bannerURL from '../assets/banner.json';
 import {tr,language,initLanguage,setLanguage,onLanguage} from './i18n.js';
+import {createColdMist} from './cold-mist.js';
 import {createOperations} from './operations.js';
 import cameraLocations from '../reference_v2/cameras.json';
 import cameraPhotos from '../reference_v2/embedded_photos.json';
@@ -80,14 +81,16 @@ for(let z of [31.4,43.1])box(world,M.wall,.9,3.65,z,1.7,7.3,2.2);
 box(world,M.cold,15.9,.13,26.0,28.8,.25,10.55);
 box(world,M.cold,22.9,.13,33.0,15.0,.25,3.9);
 box(world,M.cold,36.95,.13,27.7,9.4,.25,13.9);
-box(world,M.cold,36,.012,16.3,11.5,.02,8.65);
+box(world,M.cold,36.0,.125,15.325,11.6,.25,10.65);
 const wallSegments=[];
 function wallRun(x1,z1,x2,z2,height=3.3){const dx=x2-x1,dz=z2-z1,len=Math.hypot(dx,dz);const g=new THREE.Group();g.position.set((x1+x2)/2,0,(z1+z2)/2);g.rotation.y=-Math.atan2(dz,dx);world.add(g);box(g,M.insulated,0,height/2,0,len,height,.15);box(g,M.dark,0,.38,.085,len,.55,.025);box(g,M.yellow,0,.10,.11,len,.15,.10);for(let x=-len/2+.9;x<len/2;x+=1.15)box(g,M.steel,x,height/2,.082,.012,height,.008);const upper=new THREE.Group();upper.position.copy(g.position);upper.rotation.copy(g.rotation);upperWalls.add(upper);box(upper,M.insulated,0,(height+6.65)/2,0,len,6.65-height,.15);wallSegments.push({x1,z1,x2,z2});}
 for(const [a,b] of [[1.8,20.8],[24.3,30.6]])wallRun(a,20.65,b,20.65);
 wallRun(1.8,20.65,1.8,31.3);wallRun(1.8,31.3,15.15,31.3);wallRun(15.15,31.3,15.15,35.0);
 wallRun(15.15,35,30.6,35);wallRun(30.6,20.65,30.6,27.8);wallRun(30.6,30.6,30.6,35);
 wallRun(32.3,20.65,32.3,28.0);wallRun(32.3,30.8,32.3,35);wallRun(32.3,35,35.2,35);wallRun(38,35,41.8,35);
-wallRun(41.8,12,41.8,35);wallRun(30.1,12.5,30.1,20.2);
+wallRun(41.8,12,41.8,35);
+wallRun(30.1,3.5,30.1,9.8);wallRun(30.1,13.4,30.1,20.65);
+wallRun(32.3,10,34.1,10);wallRun(38.3,10,41.8,10);
 wallRun(41.8,.55,41.8,1.4);wallRun(41.8,8.6,41.8,12);
 wallRun(32.25,35,32.25,38.15);wallRun(32.25,41.65,32.25,45);
 // Steel sliding doors, blue fast-action curtains and protected thresholds from CCTV.
@@ -106,7 +109,9 @@ function rapidDoor(id,x,z,w,ry,title,base=0){
  const lamp=box(g,M.green,w/2+.27,2.0,.15,.13,.22,.07);
  const d={id,x,z,w,ry,title,base,g,leaf,lamp,fraction:0,mode:'auto',safety:false};doors.push(d);return d;
 }
-// The W2–W6 ramp is open across the room; no invented rapid door or divider.
+// W2 and W6 share a level floor; fast doors separate W2 from W1 and W3.
+rapidDoor('w2-w3',36.2,10,4.2,0,'W2 / W3 rapid door',.125);
+rapidDoor('w2-w1',30.1,11.6,3.6,Math.PI/2,'W2 / W1 rapid door',.125);
 rapidDoor('chilled-south',36.6,35,2.8,0,'Chilled south door',.25);
 rapidDoor('frozen-link',22.55,20.65,3.5,0,'Frozen link door',.25);
 rapidDoor('cold-link',31.45,29.3,2.8,Math.PI/2,'Cold-room connecting door',.25);
@@ -114,19 +119,20 @@ rapidDoor('north',41.8,5.0,7.2,Math.PI/2,'North dispatch door');
 rapidDoor('south',32.25,39.9,3.5,Math.PI/2,'South dispatch door');
 
 for(const [x,z] of [[22.55,19.94],[36.6,35.7]]){const r=box(world,M.steel,x,.12,z,3.3,.055,1.5);r.rotation.x=z>30?.165:-.165;}
-const chilledRamp=box(world,M.cold,37.0,.105,19.925,9.2,.04,Math.hypot(1.45,.25));chilledRamp.rotation.x=-Math.atan2(.25,1.45);
+const w3Ramp=box(world,M.cold,36.2,.105,9.6,4.2,.04,Math.hypot(1.6,.25));w3Ramp.rotation.x=-Math.atan2(.25,1.6);
+const w1Ramp=box(world,M.cold,30.1,.105,11.6,Math.hypot(1.6,.25),.04,3.6);w1Ramp.rotation.z=Math.atan2(.25,1.6);
 sign(world,'W2 · CHILLED / 4–10°C',41.69,3.9,16.2,5.6,.5,-Math.PI/2,'#356777');
 sign(world,'W6 · CHILLED / 4–10°C',41.69,3.9,27.7,5.6,.5,-Math.PI/2,'#356777');
 for(let x of [7.5,19.5,26.5,34.0,40.4]){const z=x<30?21.15:27.3;const g=new THREE.Group();g.position.set(x,5.55,z);world.add(g);box(g,M.white,0,0,0,2.4,.8,.64);for(let k of [-.65,.65]){const fan=cylinder(g,M.dark,k,0,.36,.25,.045);fan.rotation.x=Math.PI/2;for(let j=0;j<8;j++){const blade=box(g,M.steel,k,0,.392,.40,.03,.014);blade.rotation.z=j*Math.PI/4;}}}
-sign(world,'FROZEN  /  −18°C',24,3.6,20.7,5.5,.5,0,'#356777');sign(world,'CHILLED  /  4–10°C',36.6,4.7,20.7,5.7,.5,0,'#356777');
+sign(world,'FROZEN  /  −18°C',24,3.6,20.7,5.5,.5,0,'#356777');
 
 for(const x of [8,20,28]){const g=new THREE.Group();g.position.set(x,5.8,.48);world.add(g);box(g,M.white,0,0,0,2.6,.9,.65);for(const u of [-.72,.72]){const fan=cylinder(g,M.dark,u,0,.36,.28,.05);fan.rotation.x=Math.PI/2;for(let j=0;j<5;j++){const blade=box(g,M.steel,u,0,.4,.46,.04,.015);blade.rotation.z=j*Math.PI/5;}}}
 sign(world,'NORTH FROZEN / −18°C',18,4.5,.21,9,.7);
 // Dock edges and dock shelters are on the drawing's right side.
 const dockZ=[3.3,6.65,38.6,42.25];
-const dockRects=[{x0:35.2,x1:42,z0:1.8,z1:11.7},{x0:32.3,x1:42,z0:35.1,z1:45}];
+const dockRects=[{x0:32.3,x1:42,z0:3.6,z1:8.7},{x0:32.3,x1:42,z0:35.1,z1:45}];
 for(const r of dockRects){stripeRect((r.x0+r.x1)/2,(r.z0+r.z1)/2,r.x1-r.x0-.4,r.z1-r.z0-.4);for(let z=r.z0+.4;z<r.z1;z+=.9){const s=paint(r.x0+.3,z,.62,.06);s.rotation.y=-.55;}}
-floorText('KEEP CLEAR',38.8,10.5,4,.65);floorText('DISPATCH',37.0,43.9,6,.8);
+floorText('KEEP CLEAR',36.4,7.8,4,.65);floorText('DISPATCH',37.0,43.9,6,.8);
 for(let i=0;i<dockZ.length;i++){const z=dockZ[i];box(world,M.dark,42.05,2,z-1.55,.42,4,.3);box(world,M.dark,42.05,2,z+1.55,.42,4,.3);box(world,M.dark,42.05,3.9,z,.42,.3,3.4);box(world,M.rubber,42.2,-.35,z-1.1,.28,.65,.26);box(world,M.rubber,42.2,-.35,z+1.1,.28,.65,.26);box(world,M.steel,42.55,.023,z,1.35,.045,2.65);for(let s of [-1,1]){cylinder(world,M.yellow,41.1,.5,z+s*1.63,.1,1);box(world,M.dark,41.1,.42,z+s*1.63,.22,.18,.22);}sign(world,`D0${i+1}`,42.30,3.63,z,1.5,.38,Math.PI/2);box(world,M.green,41.94,2.45,z+1.7,.1,.25,.16);}
 for(let z of [10,21.9,33.1,44.2]){box(world,M.edge,48,-1.26,z,12,.45,.65);for(let x=43;x<54;x+=.65)box(world,Math.round(x/.65)%2?M.yellow:M.dark,x,-1.01,z,.60,.05,.68);}
 for(let z of dockZ){for(let side of [-1,1])paint(48,z+side*1.55,10,.07,'#e8e4cf',-1.488);}
@@ -138,7 +144,7 @@ for(let z=0;z<45;z+=.28)instance(M.dark,54.2,-1.47,z,.5,.025,.055);
 
 // Storage organization follows Warehouse2025 1030.pdf; no invented crosswise north racks.
 const rackFootprints=[],storageFootprints=[],slots=[],floorSlots=[];let bayID=0;
-const storageZones=[{x0:4.55,x1:30,z0:.55,z1:20.3},{x0:30.25,x1:35,z0:3.25,z1:10.7},{x0:1.9,x1:30.4,z0:21,z1:31.2},{x0:15.3,x1:30.4,z0:31.2,z1:34.9},{x0:32.5,x1:41.6,z0:21,z1:34.8},{x0:16.8,x1:30.3,z0:35.3,z1:44.8}];
+const storageZones=[{x0:4.55,x1:30,z0:.55,z1:20.3},{x0:1.9,x1:30.4,z0:21,z1:31.2},{x0:15.3,x1:30.4,z0:31.2,z1:34.9},{x0:32.5,x1:41.6,z0:21,z1:34.8},{x0:16.8,x1:30.3,z0:35.3,z1:44.8}];
 const usableStorageArea=1602.79;
 const rawZoneArea=storageZones.reduce((a,r)=>a+(r.x1-r.x0)*(r.z1-r.z0),0);
 const slotLabel=mat('#eff0db',.8),whiteCarton=mat('#e9e9df',.78),darkCrate=mat('#273535',.77),bluePallet=mat('#2362a6',.55),filmBand=mat('#e7e8e1',.18,.3,{transparent:true,opacity:.18,depthWrite:false});
@@ -153,10 +159,10 @@ rackBlock(.3,3.2,24.5,27.4,'z');rackBlock(3.6,13.7,27.9,31.0);
 rackBlock(17.2,30.4,31.5,34.6);rackBlock(17.2,30.3,35.5,38.45,'x',0);rackBlock(17.2,28.7,41.65,44.65,'x',0);
 // Perimeter shelving evidenced by C05/C06 and C09/C10, kept off their central aisle.
 rackBlock(32.45,33.75,23.0,34.65,'z');rackBlock(40.25,41.55,23.0,34.65,'z');
-rackBlock(30.9,32.15,12.5,18.9,'z',0);rackBlock(40.25,41.55,12.5,18.9,'z',0);
+rackBlock(30.9,32.15,14.0,19.9,'z',.25);rackBlock(40.25,41.55,12.5,18.9,'z',.25);
 // North hall: deep north–south floor-pallet lanes, divided by the C11/C12 cross aisle.
-function floorGrid(x0,x1,z0,z1){for(let x=x0+.6;x<x1-.45;x+=1.30)for(let z=z0+.57;z<z1-.43;z+=1.25){if(inColumn(x,z,1.18,1.08))continue;floorSlots.push({x,y:0,z,id:'F'+floorSlots.length,zone:'block',level:0});}}
-floorGrid(4.75,29.9,.45,10.65);floorGrid(1.9,29.9,13.25,20.25);floorGrid(30.2,32.2,3.35,10.65);
+function floorGrid(x0,x1,z0,z1){for(let x=x0+.6;x<x1-.45;x+=1.30)for(let z=z0+.57;z<z1-.43;z+=1.25){if(inColumn(x,z,1.18,1.08)||(x<9&&z<4.5))continue;floorSlots.push({x,y:0,z,id:'F'+floorSlots.length,zone:'block',level:0});}}
+floorGrid(4.75,29.9,.45,10.65);floorGrid(1.9,29.9,13.25,20.25);
 const pickTargets=[[11.2,10.02],[38.7,13.925],[23.63,37.71],[40.9,32.975]];
 slots.unshift(...floorSlots);
 const pickSlots=pickTargets.map(([x,z])=>slots.reduce((best,s,i)=>{const dist=Math.hypot(s.x-x,s.z-z)+s.y*5;return dist<best.dist?{i,dist,s}:best;},{dist:Infinity}));
@@ -198,24 +204,23 @@ box(g,mat('#283d51'),0,1.01,-.15,.39,.23,.55);box(g,mat('#d4e15e'),0,1.37,-.26,.
 return {g,wheels,carriage,cargo};}
 // The cross aisle and south aisle follow the new plan; no forklift crosses a storage lane.
 const routes=[
- [[pickSlots[0].s.x,11.60],[33.65,11.60],[33.65,5.15],[39.4,5.15],[39.4,3.3],[46.2,3.3]],
- [[37.0,pickSlots[1].s.z],[37.0,6.65],[46.2,6.65]],
+ [[pickSlots[0].s.x,11.60],[35.15,11.60],[35.15,3.3],[46.2,3.3]],
+ [[37.9,14.2],[37.9,18.3]],
  [[pickSlots[2].s.x,39.95],[39.3,39.95],[39.3,38.6],[46.2,38.6]],
- [[38.65,pickSlots[3].s.z],[36.6,pickSlots[3].s.z],[36.6,36.5],[39.2,36.5],[39.2,42.25],[46.2,42.25]]
+ [[38.65,32.25],[38.65,24.6]]
 ];
-const forklifts=routes.flatMap((points,i)=>{if(i===1)return [];const f=forklift(i===3?2:i===2?1:i);const pickup=dynamicPallet();const s=pickSlots[i].s;pickup.position.set(s.x,s.y,s.z);world.add(pickup);const deposit=truckGroups[i].loads.children[0];deposit.position.set(4.88,.015,0);return [{...f,pickup,pickHeight:s.y-.09,points,index:i,offset:0,phase:'Collecting',distance:points.slice(1).reduce((a,p,j)=>a+Math.hypot(p[0]-points[j][0],p[1]-points[j][1]),0)}];});
-
-function pathAt(points,t){const lengths=points.slice(1).map((p,j)=>Math.hypot(p[0]-points[j][0],p[1]-points[j][1]));let d=t*lengths.reduce((a,b)=>a+b,0);for(let j=0;j<lengths.length;j++){if(d<=lengths[j]||j===lengths.length-1){let u=Math.max(0,Math.min(1,d/lengths[j]));const a=points[j],b=points[j+1];return {x:a[0]+(b[0]-a[0])*u,z:a[1]+(b[1]-a[1])*u,heading:Math.atan2(b[0]-a[0],b[1]-a[1]),segment:j};}d-=lengths[j];}}
-const cycle=100;
-function updateForklift(f,time){const t=(time+f.offset)%cycle;let p,loaded=true,lift=.15;const pickHeading=f.index===0||f.index===2?Math.PI:Math.PI/2;
-if(t<8){p=pathAt(f.points,0);p.heading=pickHeading;lift=f.pickHeight+Math.max(0,Math.min((t-3)/5,1))*.08;f.phase='Picking pallet';loaded=t>3;}
-else if(t<46){p=pathAt(f.points,(t-8)/38);lift=.28;f.phase='To dispatch';}
-else if(t<53){p=pathAt(f.points,1);lift=.28-(t-46)/7*.33;f.phase='Loading trailer';loaded=t<51;}
-else if(t<94){p=pathAt(f.points,1-(t-53)/41);lift=.1;loaded=false;f.phase='Returning empty';}
-// Rest along the aisle after returning; turning across it would block visitors
-// throughout the other vehicles' dispatch turns.
-else{p=pathAt(f.points,0);if(f.index===3)p.heading=pickHeading;lift=.1;loaded=false;f.phase='Next collection';}
-f.g.position.set(p.x,f.index===3?Math.max(0,Math.min(.25,(35.8-p.z)*.25)):0,p.z);f.g.rotation.y=p.heading;f.carriage.position.y=lift;f.cargo.visible=loaded;f.pickup.visible=t<=3||t>=96;f.wheels.forEach(w=>w.rotation.x=time*4);truckGroups[f.index].loads.children[0].visible=t>=51||time+f.offset>=cycle;}
+const forklifts=routes.map((points,i)=>{const f=forklift(i),pickup=dynamicPallet(),deposit=dynamicPallet();const slot=pickSlots[i].s;pickup.position.set(slot.x,slot.y,slot.z);world.add(pickup);
+ if(i===1||i===3){deposit.position.set(40.1,.25,points.at(-1)[1]);world.add(deposit);}else{deposit.visible=false;world.add(deposit);}
+ return {...f,pickup,deposit,pickHeight:slot.y-.09,points,index:i,phase:'To dispatch',distance:points.slice(1).reduce((sum,p,j)=>sum+Math.hypot(p[0]-points[j][0],p[1]-points[j][1]),0)};
+});
+function pathAt(points,t){const lengths=points.slice(1).map((p,j)=>Math.hypot(p[0]-points[j][0],p[1]-points[j][1]));let d=Math.max(0,Math.min(1,t))*lengths.reduce((a,b)=>a+b,0);for(let j=0;j<lengths.length;j++){if(d<=lengths[j]||j===lengths.length-1){const u=Math.max(0,Math.min(1,d/lengths[j])),a=points[j],b=points[j+1];return {x:a[0]+(b[0]-a[0])*u,z:a[1]+(b[1]-a[1])*u,heading:Math.atan2(b[0]-a[0],b[1]-a[1]),segment:j};}d-=lengths[j];}}
+function updateForklift(f,time){
+ const duration=2*f.distance/1.15,phase=((time%duration)+duration)%duration/duration,outbound=phase<.5,u=outbound?phase*2:2-phase*2,p=pathAt(f.points,u);
+ f.g.position.set(p.x,0,p.z);f.g.rotation.y=p.heading;f.cargo.visible=outbound;f.carriage.position.y=.15+.1*Math.sin(u*Math.PI);
+ f.pickup.visible=!outbound;f.deposit.visible=!outbound&&(f.index===1||f.index===3);f.wheels.forEach(w=>w.rotation.x=time*3.5);
+ f.phase=outbound?'To dispatch':'Returning empty';if(f.index===0||f.index===2)truckGroups[f.index].loads.children[0].visible=!outbound;
+ f.duration=duration;f.travelPhase=phase;f.loaded=outbound;
+}
 
 // Clean versions of the physical details visible in CCTV: guardrails, pallet trucks,
 // indoor apron columns, cold-room evaporators, rapid doors and security cameras.
@@ -238,6 +243,12 @@ const bannerGroup=new THREE.Group();world.add(bannerGroup);bannerGroup.position.
 box(bannerGroup,M.white,0,0,0,7.2,2.68,.065);
 const brandBoard=new THREE.Mesh(new THREE.PlaneGeometry(7.05,2.58),new THREE.MeshBasicMaterial({map:bannerTexture}));brandBoard.position.z=.045;bannerGroup.add(brandBoard);
 
+// C13/C14: protected loading-room perimeter, controls and a stainless bench.
+for(let z=3.7;z<7.7;z+=.45)box(world,Math.round(z/.45)%2?M.yellow:M.dark,32.6,.42,z,.14,.84,.43);
+box(world,M.steel,33.0,.88,4.1,.62,.10,1.5);for(const z of [3.5,4.7])box(world,M.steel,33,.43,z,.045,.86,.045);
+box(world,M.white,32.7,1.65,5.6,.13,.9,.8);for(let z=5.35;z<5.9;z+=.18)box(world,M.green,32.78,1.7,z,.015,.07,.06);
+sign(world,'W3 / LOADING DOCK',37,4.6,1.8,5,.5,0,'#356777');
+const coldMist=createColdMist(THREE,world);
 // Consolidate rack steel, timber, cartons and tiny labels into GPU instances.
 const staticBatches=new Map();for(const obj of [...world.children]){if(!obj.isMesh||obj.material.transparent)continue;obj.updateMatrix();const key=obj.material;let parts=staticBatches.get(key);if(!parts)staticBatches.set(key,parts=[]);parts.push((obj.geometry.index?obj.geometry.toNonIndexed():obj.geometry.clone()).applyMatrix4(obj.matrix));world.remove(obj);}for(const [material,parts] of staticBatches){const mesh=new THREE.Mesh(mergeGeometries(parts),material);mesh.castShadow=true;mesh.receiveShadow=true;world.add(mesh);parts.forEach(p=>p.dispose());}
 let instanceTotal=0;for(const [material,items] of batches){const mesh=new THREE.InstancedMesh(boxGeo,material,items.length);items.forEach(([x,y,z,sx,sy,sz,ry],i)=>{dummy.position.set(x,y,z);dummy.rotation.set(0,ry,0);dummy.scale.set(sx,sy,sz);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);});mesh.castShadow=true;mesh.receiveShadow=true;mesh.computeBoundingSphere();world.add(mesh);instanceTotal+=items.length;}
@@ -265,7 +276,7 @@ let selectedCamera=null,photoIndex=0;
 const selector=$('cameraSelect');
 cameraLocations.forEach(c=>{const option=document.createElement('option');option.value=c.id;option.textContent=`C${String(c.id).padStart(2,'0')} · ${tr(c.zone)}${cameraPhotos[c.id]?'':' ('+tr('plan only')+')'}`;selector.append(option);});
 function renderReference(){const items=cameraPhotos[selectedCamera]||[];const c=cameraLocations.find(c=>c.id===selectedCamera);$('photoTitle').textContent=`C${String(c.id).padStart(2,'0')} / ${tr(c.zone)}`;$('photoMeta').textContent=items.length?(language==='zh-Hant'?`2026年9月28日 · 第${photoIndex+1}／${items.length}張`:`28 SEP 2026 · reference ${photoIndex+1} of ${items.length}`):tr('Plan location only · no matching photo supplied');$('referencePhoto').style.display=items.length?'block':'none';$('referenceEmpty').style.display=items.length?'none':'block';if(items.length){$('referencePhoto').src=items[photoIndex].data;$('referencePhoto').alt=`Camera C${c.id}: ${c.zone}`;}$('nextPhoto').style.display=items.length>1?'inline-block':'none';$('photoSource').textContent=items.length?items[photoIndex].file:tr('C04, C07 and C08 are located from the plan, without a supplied image.');}
-const cameraViewOffsets={16:{x:40.3,z:-.25,dx:1,dz:0,height:2.8},17:{x:40.3,z:46.1,dx:1,dz:0,height:2.8},5:{x:38.9,z:32.0,dx:-.12,dz:-1},6:{x:34.6,z:22.0,dx:.18,dz:1},7:{x:29.1,z:29.2,dx:-1,dz:-.25},8:{x:16.7,z:24.5,dx:.7,dz:.7},9:{x:37.25,z:19.6,dx:-.12,dz:-1},10:{x:33.3,z:12.0,dx:.2,dz:1},24:{x:4.15,z:.8,dx:0,dz:1}};
+const cameraViewOffsets={13:{x:34.3,z:8.6,dx:1,dz:-.85,height:3.5},16:{x:40.3,z:-.25,dx:1,dz:0,height:2.8},17:{x:40.3,z:46.1,dx:1,dz:0,height:2.8},5:{x:38.9,z:32.0,dx:-.12,dz:-1},6:{x:34.6,z:22.0,dx:.18,dz:1},7:{x:29.1,z:29.2,dx:-1,dz:-.25},8:{x:16.7,z:24.5,dx:.7,dz:.7},9:{x:37.25,z:19.6,dx:-.12,dz:-1},10:{x:33.3,z:12.0,dx:.2,dz:1},24:{x:4.15,z:.8,dx:0,dz:1}};
 function selectCamera(id){ops.exitWalk();controls.enabled=true;const c=cameraLocations.find(c=>c.id===Number(id));if(!c)return;selectedCamera=c.id;photoIndex=0;currentView='C'+String(c.id).padStart(2,'0');transition=null;document.querySelectorAll('[data-view]').forEach(e=>e.classList.remove('active'));camera.fov=c.id===23||c.id===25?87:72;camera.updateProjectionMatrix();const exterior=c.id>=16&&c.id!==24;const length=exterior?13:9;const v={...c,...cameraViewOffsets[c.id]};const mag=Math.hypot(v.dx,v.dz);camera.position.set(v.x-21,v.height,v.z-22.5);controls.target.set(v.x-21+v.dx/mag*length,exterior?-.3:1.3,v.z-22.5+v.dz/mag*length);controls.update();upperWalls.visible=true;indoorCeiling.visible=true;roof.visible=false;cameraMarkers.visible=false;$('camerasBtn').classList.remove('active');selector.value=String(c.id);$('photoPanel').classList.add('open');document.body.classList.add('camera-mode');renderReference();}
 selector.onchange=()=>selectCamera(selector.value);
 $('camerasBtn').onclick=()=>{cameraMarkers.visible=!cameraMarkers.visible;$('camerasBtn').classList.toggle('active',cameraMarkers.visible);};
@@ -276,10 +287,10 @@ $('closeImage').onclick=()=>$('imageModal').classList.remove('open');
 window.addEventListener('keydown',e=>{if(e.key==='Escape')$('imageModal').classList.remove('open');});
 
 const tv=new THREE.Vector3();let tick=0;
-function renderAt(t,dt=0){ops.update(t,dt);if(transition){transition.t=Math.min(1,transition.t+dt/1.3);const k=transition.t*transition.t*(3-2*transition.t);camera.position.lerpVectors(transition.startPos,transition.endPos,k);controls.target.lerpVectors(transition.startTarget,transition.endTarget,k);if(transition.t===1)transition=null;}if(currentView==='follow'){const f=forklifts[0];tv.set(f.g.position.x-21,1.7,f.g.position.z-22.5);controls.target.lerp(tv,.08);tv.add(new THREE.Vector3(0,18,2.5));camera.position.lerp(tv,.045);}if(currentView!=='walk')controls.update();if(labelsOn){labelEntries.forEach(({e,v})=>{tv.copy(v).project(camera);e.style.left=(tv.x*.5+.5)*innerWidth+'px';e.style.top=(-tv.y*.5+.5)*innerHeight+'px';e.style.display=tv.z>1||tv.z<0||currentView==='walk'||currentView==='inside'||currentView==='follow'||currentView.startsWith('C')?'none':'';});}composer.render();if(tick++%15===0){$('activities').innerHTML=forklifts.map((f,i)=>`<div class="activity"><span>FL-0${i+1}</span><em>${tr(f.phase)}</em></div>`).join('')+ops.staffStatus();ops.refreshDoorUI();$('simTime').textContent=String(Math.floor(t/60)).padStart(2,'0')+':'+String(Math.floor(t%60)).padStart(2,'0')+' · '+tr('Continuous loading cycle');$('loads').textContent=ops.dispatched()+' '+tr('pallets dispatched');}}
+function renderAt(t,dt=0){ops.update(t,dt);coldMist.update(t);if(transition){transition.t=Math.min(1,transition.t+dt/1.3);const k=transition.t*transition.t*(3-2*transition.t);camera.position.lerpVectors(transition.startPos,transition.endPos,k);controls.target.lerpVectors(transition.startTarget,transition.endTarget,k);if(transition.t===1)transition=null;}if(currentView==='follow'){const f=forklifts[0];tv.set(f.g.position.x-21,1.7,f.g.position.z-22.5);controls.target.lerp(tv,.08);tv.add(new THREE.Vector3(0,18,2.5));camera.position.lerp(tv,.045);}if(currentView!=='walk')controls.update();if(labelsOn){labelEntries.forEach(({e,v})=>{tv.copy(v).project(camera);e.style.left=(tv.x*.5+.5)*innerWidth+'px';e.style.top=(-tv.y*.5+.5)*innerHeight+'px';e.style.display=tv.z>1||tv.z<0||currentView==='walk'||currentView==='inside'||currentView==='follow'||currentView.startsWith('C')?'none':'';});}composer.render();if(tick++%15===0){$('activities').innerHTML=forklifts.map((f,i)=>`<div class="activity"><span>FL-0${i+1}</span><em>${tr(f.phase)}</em></div>`).join('')+ops.staffStatus();ops.refreshDoorUI();$('simTime').textContent=String(Math.floor(t/60)).padStart(2,'0')+':'+String(Math.floor(t%60)).padStart(2,'0')+' · '+tr('Continuous loading cycle');$('loads').textContent=ops.dispatched()+' '+tr('pallets dispatched');}}
 function animate(stamp){const dt=lastStamp===null?0:Math.min((stamp-lastStamp)/1000,.08);lastStamp=stamp;if(!paused)simTime+=dt*speed;renderAt(simTime,dt);requestAnimationFrame(animate);}
 window.addEventListener('hf-seek',e=>{paused=true;simTime=e.detail.time;renderAt(simTime);});
-window.warehouse={ready:false,setView,selectCamera,setLanguage,operations:ops,seek(t){paused=true;simTime=t;tick=0;renderAt(t);},resume(){paused=false;},sampleFleet(t){ops.seek(t);return forklifts.map(f=>({x:f.g.position.x,z:f.g.position.z,heading:f.g.rotation.y,loaded:f.cargo.visible,phase:f.phase}));},getState(){return {staffCount:6,forkliftCount:forklifts.length,walkingSpeed:8,tourSpeed:6.6,walkingFov:90,openChilledLink:true,parkingColumns:0,brandBanner:true,language,doors:ops.doorState(),staff:ops.staffState(),ramps:ops.ramps,walking:ops.walkState(),time:simTime,paused,speed,view:currentView,stocked,slots:slots.length,bays:bayID,rackZoneArea:rawZoneArea,usableStorageArea,rackAllocation:rawZoneArea/usableStorageArea,apronLevel:-1.5,trailerBedLevel:0,rackFootprints,dockRects,columnRects,routes,storageFootprints,groundPositions:floorSlots.length,cameraCount:cameraLocations.length,photoCount:Object.values(cameraPhotos).reduce((a,b)=>a+b.length,0),cameraData:cameraLocations,wallSegments,vehicles:forklifts.map(f=>({x:f.g.position.x,z:f.g.position.z,loaded:f.cargo.visible,phase:f.phase})),instanceTotal};}};
+window.warehouse={ready:false,setView,selectCamera,setLanguage,operations:ops,seek(t){paused=true;simTime=t;tick=0;renderAt(t);},resume(){paused=false;},sampleFleet(t){ops.seek(t);return forklifts.map(f=>({x:f.g.position.x,z:f.g.position.z,heading:f.g.rotation.y,loaded:f.cargo.visible,phase:f.phase}));},getState(){return {staffCount:8,forkliftCount:forklifts.length,walkingSpeed:8,tourSpeed:6.6,walkingFov:90,openChilledLink:true,chilledFloorLevel:.25,coldMist:true,parkingColumns:0,brandBanner:true,language,doors:ops.doorState(),staff:ops.staffState(),ramps:ops.ramps,walking:ops.walkState(),time:simTime,paused,speed,view:currentView,stocked,slots:slots.length,bays:bayID,rackZoneArea:rawZoneArea,usableStorageArea,rackAllocation:rawZoneArea/usableStorageArea,apronLevel:-1.5,trailerBedLevel:0,rackFootprints,dockRects,columnRects,routes,storageFootprints,groundPositions:floorSlots.length,cameraCount:cameraLocations.length,photoCount:Object.values(cameraPhotos).reduce((a,b)=>a+b.length,0),cameraData:cameraLocations,wallSegments,vehicles:forklifts.map(f=>({x:f.g.position.x,z:f.g.position.z,loaded:f.cargo.visible,phase:f.phase})),instanceTotal};}};
 onLanguage(()=>{
  signRecords.forEach(({material,text,bg})=>{material.map.dispose();material.map=labelTexture(tr(text),bg);material.needsUpdate=true;});
  labelEntries.forEach(({e,text,sub})=>e.innerHTML=tr(text)+(sub?'<small>'+tr(sub)+'</small>':''));

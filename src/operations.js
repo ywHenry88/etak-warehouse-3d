@@ -47,16 +47,19 @@ export function createOperations(ctx){
   if(z<.55&&x>39)return x<41&&z>-.4?0:-1.5;
   if(z>45)return x>39&&x<41&&z<45.3?0:-1.5;
   if(z>=34.95&&z<=35.85&&x>35.2&&x<38)return .25*clamp((35.85-z)/.9,0,1);
-  if(z>19.2&&z<20.65&&((x>20.8&&x<24.3)||(x>32.4&&x<41.6)))return .25*(z-19.2)/1.45;
+  if(x>29.3&&x<30.9&&z>9.8&&z<13.4)return .25*clamp((x-29.3)/1.6,0,1);
+  if(x>34.1&&x<38.3&&z>8.8&&z<10.4)return .25*clamp((z-8.8)/1.6,0,1);
+  if(x>30.1&&x<41.8&&z>=10&&z<20.65)return .25;
+  if(z>19.2&&z<20.65&&x>20.8&&x<24.3)return .25*(z-19.2)/1.45;
   if(z>=20.65&&z<35&&((x>32.3&&x<41.8)||(x>1.8&&x<30.6&&(z<31.3||x>15.15))))return .25;
   return 0;
  }
  const staff=[];
  function staffMover(i,points){
-  const g=new THREE.Group();world.add(g);box(g,M.red,0,.26,0,.64,.44,.53);
-  for(const x of [-.24,.24]){box(g,M.red,x,.095,.62,.17,.12,1.65);const w=cylinder(g,M.rubber,x,.085,1.25,.085,.15,Math.PI/2);}
-  bar(g,M.dark,[0,.39,-.13],[0,1.05,-.74],.055);box(g,M.dark,0,1.05,-.74,.43,.085,.08);
-  const cargo=dynamicPallet();cargo.position.set(0,.04,.70);g.add(cargo);
+  const g=new THREE.Group(),cart=new THREE.Group();world.add(g);g.add(cart);box(cart,M.red,0,.26,0,.64,.44,.53);
+  for(const x of [-.24,.24]){box(cart,M.red,x,.095,.62,.17,.12,1.65);const w=cylinder(cart,M.rubber,x,.085,1.25,.085,.15,Math.PI/2);}
+  bar(cart,M.dark,[0,.39,-.13],[0,1.05,-.74],.055);box(cart,M.dark,0,1.05,-.74,.43,.085,.08);
+  const cargo=dynamicPallet();cargo.position.set(0,.04,.70);cart.add(cargo);
   const person=new THREE.Group();person.position.set(0,0,-1.17);g.add(person);
   const coat=new THREE.MeshStandardMaterial({color:i?'#e5b448':'#b1c958',roughness:.8}),navy=new THREE.MeshStandardMaterial({color:'#344253',roughness:.9});
   box(person,coat,0,1.12,0,.46,.62,.27);for(const z of [-.143,.143])box(person,M.white,0,1.12,z,.46,.035,.008);
@@ -64,30 +67,39 @@ export function createOperations(ctx){
   const legs=[];for(const x of [-.13,.13]){const leg=new THREE.Group();leg.position.set(x,.83,0);person.add(leg);box(leg,navy,0,-.35,0,.17,.70,.20);box(leg,M.dark,0,-.76,.075,.20,.12,.33);legs.push(leg);bar(person,coat,[x*2,1.36,0],[x*2,1.06,.42],.12);}
   const pickup=dynamicPallet();pickup.position.set(points[0][0],floorHeight(...points[0]),points[0][1]+.7);world.add(pickup);
   const deposit=dynamicPallet();deposit.position.set(i<2?47.0:points.at(-1)[0],i<2?.015:floorHeight(...points.at(-1)),i<2?dockZ[i?3:1]:points.at(-1)[1]+.70);world.add(deposit);deposit.visible=false;
-  const result={g,cargo,person,legs,pickup,deposit,points,index:i,clock:0,phase:'Next collection',done:false};staff.push(result);return result;
+  const result={g,cart,cargo,person,legs,pickup,deposit,points,index:i,staff:true,distance:points.slice(1).reduce((sum,p,j)=>sum+Math.hypot(p[0]-points[j][0],p[1]-points[j][1]),0),clock:0,phase:'Next collection',done:false};staff.push(result);return result;
  }
- staffMover(0,[[39.1,9.0],[39.1,6.65],[45.6,6.65]]);
- staffMover(1,[[34.6,37.4],[37.6,37.4],[37.6,42.25],[45.6,42.25]]);
+ staffMover(0,[[39.1,8.0],[39.1,6.65],[45.6,6.65]]);
+ staffMover(1,[[35.0,42.25],[45.6,42.25]]);
  staffMover(2,[[5.3,25.8],[11.4,25.8]]);
  staffMover(3,[[5.2,37.0],[11.2,37.0]]);
- staffMover(4,[[36.2,25.8],[36.2,29.8]]);
- staffMover(5,[[35.0,14.2],[35.0,17.0]]);
+ staffMover(4,[[35.3,25.0],[35.3,30.0]]);
+ staffMover(5,[[34.5,14.5],[34.5,18.0]]);
+ staffMover(6,[[17.5,25.8],[23.2,25.8]]);
+ staffMover(7,[[4.4,32.9],[11.8,32.9]]);
+ function motion(f,time){const speed=f.staff?1.65:1.15,duration=2*f.distance/speed,phase=((time%duration)+duration)%duration/duration;return {duration,phase,outbound:phase<.5,p:pathAt(f.points,phase<.5?phase*2:2-phase*2)};}
  function updateStaff(f,time){
-  const t=clamp(time,0,70);let u=0,loaded=t>=3&&t<36;
-  if(t<4)f.phase='Picking pallet';else if(t<32){u=(t-4)/28;f.phase='Pushing pallet truck';}else if(t<38){u=1;f.phase='Loading by hand';}else if(t<66){u=1-(t-38)/28;f.phase='Returning empty';}else f.phase='Next collection';
-  const p=pathAt(f.points,u);f.g.position.set(p.x,floorHeight(p.x,p.z),p.z);f.g.rotation.y=p.heading;f.cargo.visible=loaded;f.pickup.visible=t<3;f.deposit.visible=t>=36;
-  const moving=(t>4&&t<32)||(t>38&&t<66);f.legs.forEach((leg,i)=>leg.rotation.x=moving?Math.sin(t*7+i*Math.PI)*.42:0);
+  const {duration,phase,outbound,p}=motion(f,time),trip=Math.floor(time/duration),withCart=f.index!==7&&(trip+f.index)%3!==2;
+  f.hasCart=withCart;f.cart.visible=withCart;f.person.position.z=withCart?-1.17:0;
+  f.g.position.set(p.x,floorHeight(p.x,p.z),p.z);f.g.rotation.y=p.heading+(outbound?0:Math.PI);
+  f.cargo.visible=withCart&&outbound;f.pickup.visible=false;f.deposit.visible=false;
+  f.phase=withCart?(outbound?'Pushing pallet truck':'Returning empty'):'Walking to next task';
+  f.legs.forEach((leg,i)=>leg.rotation.x=Math.sin(time*9+i*Math.PI)*.42);
+  f.duration=duration;f.travelPhase=phase;
  }
- // Separate dispatch turns avoid head-on traffic at the narrow blue doors.
- // Two forklifts work together, then the other two, followed by hand-pallet loading.
- let stage=0,lastTime=0,dispatchCount=0;const groups=[[0,1],[2]];
- function reset(){stage=0;lastTime=0;dispatchCount=0;forklifts.forEach(f=>{f.clock=0;f.done=false;updateForklift(f,0);f.phase='Next collection';});staff.forEach(f=>{f.clock=0;f.done=false;updateStaff(f,0);f.pickup.visible=false;f.phase='Next collection';});doors.forEach(d=>{d.fraction=0;d.safety=false;d.passageRequest=0;drawDoor(d);});}
- function allActors(){return [...forklifts,...staff].map((f,i)=>{
-  const t=f.clock,enabled=i<forklifts.length?stage<2&&groups[stage].includes(i)&&!f.done:(f.index>=2||stage===2)&&!f.done;
-  const moving=i<forklifts.length?(t>=8&&t<46)||(t>=53&&t<94):(t>=4&&t<32)||(t>=38&&t<66);
-  const u=i<forklifts.length?(t<46?(t+.2-8)/38:1-(t+.2-53)/41):(t<32?(t+.2-4)/28:1-(t+.2-38)/28),p=pathAt(f.points,clamp(u,0,1));
-  return {x:f.g.position.x,z:f.g.position.z,heading:f.g.rotation.y,extent:2.9,active:enabled&&moving,dx:p.x-f.g.position.x,dz:p.z-f.g.position.z};
- }).concat(walking?[{x:walk.x,z:walk.z,heading:walk.yaw,extent:.4,active:Math.hypot(intent.x,intent.z)>.001,dx:intent.x,dz:intent.z}]:[]);}
+ // Every actor runs its own continuous circuit; no dispatch-group idle stages.
+ let lastTime=0,dispatchCount=0;
+ const randomValues=new Uint32Array(12);crypto.getRandomValues(randomValues);
+ [...forklifts,...staff].forEach((f,i)=>{f.initialClock=(.1+(randomValues[i]/4294967296)*.8)*2*f.distance/(f.staff?1.65:1.15);});
+ function updateActor(f,time){if(f.staff)updateStaff(f,time);else{updateForklift(f,time);f.g.position.y=floorHeight(f.g.position.x,f.g.position.z);}}
+ function reset(){
+  lastTime=0;dispatchCount=0;doors.forEach(d=>{d.fraction=0;d.safety=false;d.passageRequest=0;drawDoor(d);});
+  for(const f of [...forklifts,...staff]){
+   if(!f.spawnChosen){for(let i=0;i<160;i++){updateActor(f,f.initialClock);const shape=actorShape(f);if(!bodyWallHit(f)&&!blockedDoor(f.g.position.x,f.g.position.z,Math.max(shape.front,shape.rear)+.4,f.g.rotation.y))break;f.initialClock+=.37;}f.spawnChosen=true;}
+   f.clock=f.initialClock;updateActor(f,f.clock);
+  }
+ }
+ function allActors(){return [...forklifts,...staff].map(f=>{const p=motion(f,f.clock+.2).p,shape=actorShape(f);return {x:f.g.position.x,z:f.g.position.z,heading:f.g.rotation.y,extent:Math.max(shape.rear,shape.front)+.3,active:true,dx:p.x-f.g.position.x,dz:p.z-f.g.position.z};}).concat(walking?[{x:walk.x,z:walk.z,heading:walk.yaw,extent:.4,active:Math.hypot(intent.x,intent.z)>.001,dx:intent.x,dz:intent.z}]:[]);}
  function drawDoor(d){const open=d.fraction*.985;d.leaf.scale.y=1-open;d.leaf.position.y=3.9*open;d.lamp.material=d.fraction>.94?M.green:M.red;}
  function doorsStep(dt){
   const actors=allActors();for(const d of doors){let demand=false,occupied=false,tailPresent=false;
@@ -111,26 +123,18 @@ export function createOperations(ctx){
   const ox=(r.x0+r.x1)/2,oz=(r.z0+r.z1)/2,hw=(r.x1-r.x0)/2,hd=(r.z1-r.z0)/2,dx=cx-ox,dz=cz-oz;
   return Math.abs(dx)<Math.abs(rx)*halfWidth+Math.abs(fx)*hl+hw&&Math.abs(dz)<Math.abs(rz)*halfWidth+Math.abs(fz)*hl+hd&&Math.abs(dx*rx+dz*rz)<halfWidth+hw*Math.abs(rx)+hd*Math.abs(rz)&&Math.abs(dx*fx+dz*fz)<hl+hw*Math.abs(fx)+hd*Math.abs(fz);
  }
- function bodyWallHit(f){return staticWalls.find(r=>bodyHits(f.g.position.x,f.g.position.z,f.g.rotation.y,r));}
- function pedestrianHit(f){return walking&&bodyHits(f.g.position.x,f.g.position.z,f.g.rotation.y,{x0:walk.x-.26,x1:walk.x+.26,z0:walk.z-.26,z1:walk.z+.26},.69,1.3,2.3);}
+ // Reserve cart space throughout each staff circuit, including when walking
+ // empty, so attaching a cart cannot suddenly overlap a nearby visitor.
+ function actorShape(f){return f.staff?(f.index!==7?{half:.48,rear:1.52,front:1.52}:{half:.25,rear:.3,front:.3}):{half:.69,rear:1.3,front:2.3};}
+ function bodyWallHit(f){const shape=actorShape(f);return staticWalls.find(r=>bodyHits(f.g.position.x,f.g.position.z,f.g.rotation.y,r,shape.half,shape.rear,f.staff?shape.front:1.02));}
+ function pedestrianHit(f){const shape=actorShape(f);return walking&&bodyHits(f.g.position.x,f.g.position.z,f.g.rotation.y,{x0:walk.x-.26,x1:walk.x+.26,z0:walk.z-.26,z1:walk.z+.26},shape.half,shape.rear,shape.front);}
  function step(dt){
   doorsStep(dt);
-  for(const f of staff.slice(2)){
-   const old=f.clock;updateStaff(f,old+dt);const blocked=bodyWallHit(f)||pedestrianHit(f);
-   if(blocked){updateStaff(f,old);f.phase='Waiting for traffic';}else{f.clock=old+dt;if(f.clock>=70){f.clock=0;updateStaff(f,0);}}
-  }
-  if(stage<2){
-   for(const i of groups[stage]){const f=forklifts[i];if(f.done)continue;const old=f.clock;updateForklift(f,Math.min(99.99,old+dt));
-    const door=blockedDoor(f.g.position.x,f.g.position.z,2.65,f.g.rotation.y),wall=bodyWallHit(f)||pedestrianHit(f);
-    if(door||wall){if(door)door.passageRequest=.5;updateForklift(f,Math.min(99.99,old));f.phase=door?'Waiting for door':'Waiting for traffic';}
-    else{f.clock=Math.min(100,old+dt);if(old<51&&f.clock>=51)dispatchCount++;f.done=f.clock>=100;}
-   }
-   if(groups[stage].every(i=>forklifts[i].done)){stage++;if(stage===2)staff.slice(0,2).forEach(f=>f.pickup.visible=true);}
-  }else{
-   for(const f of staff.slice(0,2)){if(f.done)continue;const old=f.clock;updateStaff(f,old+dt);const door=blockedDoor(f.g.position.x,f.g.position.z,2.1,f.g.rotation.y),wall=bodyWallHit(f)||pedestrianHit(f);
-    if(door||wall){if(door)door.passageRequest=.5;updateStaff(f,old);f.phase=door?'Waiting for door':'Waiting for traffic';}else{f.clock=Math.min(70,old+dt);if(old<36&&f.clock>=36)dispatchCount++;f.done=f.clock>=70;}
-   }
-   if(staff.slice(0,2).every(f=>f.done)){stage=0;forklifts.forEach(f=>{f.clock=0;f.done=false;updateForklift(f,0);});staff.slice(0,2).forEach(f=>{f.clock=0;f.done=false;updateStaff(f,0);f.pickup.visible=false;});}
+  for(const f of [...forklifts,...staff]){
+   const old=f.clock,previous=f.travelPhase;updateActor(f,old+dt);const shape=actorShape(f);
+   const door=blockedDoor(f.g.position.x,f.g.position.z,Math.max(shape.front,shape.rear)+.15,f.g.rotation.y),wall=bodyWallHit(f)||pedestrianHit(f);
+   if(door||wall){if(door)door.passageRequest=.5;updateActor(f,old);f.phase=door?'Waiting for door':'Waiting for traffic';}
+   else{f.clock=old+dt;if(previous<.5&&f.travelPhase>=.5&&(f.staff?f.hasCart:true))dispatchCount++;}
   }
  }
  function seek(time){if(time<lastTime-.00001)reset();let remaining=Math.max(0,time-lastTime);while(remaining>.000001){const dt=Math.min(.05,remaining);step(dt);remaining-=dt;}lastTime=time;}
@@ -155,14 +159,14 @@ export function createOperations(ctx){
   // Match the envelope that makes vehicles yield to the visitor. Otherwise the
   // visitor can enter their stopping space and both parties wait indefinitely.
   const personRect={x0:x-.26,x1:x+.26,z0:z-.26,z1:z+.26};
-  if([...forklifts,...staff].some(f=>bodyHits(f.g.position.x,f.g.position.z,f.g.rotation.y,personRect,.69,1.3,2.3)))return false;
+  if([...forklifts,...staff].some(f=>{const sh=actorShape(f);return bodyHits(f.g.position.x,f.g.position.z,f.g.rotation.y,personRect,sh.half,sh.rear,sh.front);}))return false;
   return true;
  }
  function canWalk(x,z){return canPlan(x,z)&&!blockedDoor(x,z,.43)&&Math.abs(floorHeight(x,z)-floorHeight(walk.x,walk.z))<.20;
  }
  function walkCamera(){walk.y=floorHeight(walk.x,walk.z);camera.position.set(walk.x-21,walk.y+1.67,walk.z-22.5);camera.lookAt(camera.position.x+Math.sin(walk.yaw)*Math.cos(walk.pitch),camera.position.y+Math.sin(walk.pitch),camera.position.z+Math.cos(walk.yaw)*Math.cos(walk.pitch));camera.updateMatrixWorld();}
  function relocate(place){
-  const p={south:[27.8,39.95,Math.PI/2],north:[20.5,11.6,Math.PI/2],rampNorth:[40.7,-.55,Math.PI/2],rampSouth:[40.7,46.1,Math.PI/2]}[place]||[27.8,39.95,Math.PI/2];
+  const p={northwest:[6.5,2,0],south:[27.8,39.95,Math.PI/2],north:[20.5,11.6,Math.PI/2],rampNorth:[40.7,-.55,Math.PI/2],rampSouth:[40.7,46.1,Math.PI/2]}[place]||[27.8,39.95,Math.PI/2];
   let position=p;
   // A tour can start at any traffic phase; never spawn inside a passing vehicle.
   if(!canPlan(p[0],p[1])){
@@ -203,14 +207,14 @@ export function createOperations(ctx){
    const sin=Math.sin(f.g.rotation.y),cos=Math.cos(f.g.rotation.y),pad=.26*(Math.abs(sin)+Math.abs(cos));
    const local=(px,pz)=>{const dx=px-f.g.position.x,dz=pz-f.g.position.z;return [cos*dx-sin*dz,sin*dx+cos*dz];};
    const [sx,sz]=local(x,z),[ex,ez]=local(a,b);
-   if(intersects(sx,sz,ex,ez,{x0:-.69,x1:.69,z0:-1.3,z1:2.3},pad))return false;
+   const sh=actorShape(f);if(intersects(sx,sz,ex,ez,{x0:-sh.half,x1:sh.half,z0:-sh.rear,z1:sh.front},pad))return false;
   }
   // A diagonal can cut across the lowered apron even when both ends are level.
   const n=Math.max(1,Math.ceil(Math.hypot(a-x,b-z)/.03));let height=floorHeight(x,z);
   for(let i=1;i<=n;i++){const next=floorHeight(x+(a-x)*i/n,z+(b-z)*i/n);if(Math.abs(next-height)>=.20)return false;height=next;}
   return true;
  }
- const tour=createTour({walk,canPlan,canYield,canStep,moveTo:(x,z)=>{if(!canWalk(x,z))return false;walk.x=x;walk.z=z;walkCamera();return true;},face:(yaw,dt)=>{const delta=Math.atan2(Math.sin(yaw-walk.yaw),Math.cos(yaw-walk.yaw));walk.yaw+=clamp(delta*(1-Math.exp(-dt*3.5)),-dt*2.2,dt*2.2);walkCamera();},begin:()=>{setView('walk');ctx.resumeSimulation?.();relocate('south');doors.forEach(d=>d.mode='auto');},doorRequest:p=>{intent.x=p.x-walk.x;intent.z=p.z-walk.z;},tr});
+ const tour=createTour({walk,canPlan,canYield,canStep,moveTo:(x,z)=>{if(!canWalk(x,z))return false;walk.x=x;walk.z=z;walkCamera();return true;},face:(yaw,dt)=>{const delta=Math.atan2(Math.sin(yaw-walk.yaw),Math.cos(yaw-walk.yaw));walk.yaw+=clamp(delta*(1-Math.exp(-dt*3.5)),-dt*2.2,dt*2.2);walkCamera();},begin:()=>{setView('walk');ctx.resumeSimulation?.();relocate('northwest');doors.forEach(d=>d.mode='auto');},doorRequest:p=>{intent.x=p.x-walk.x;intent.z=p.z-walk.z;},tr});
  const mobileControls=createMobileControls({tr,toggleTour:()=>tour.toggle(),onLanguage});
  $('exitWalk').onclick=()=>setView('overview');$('walkStart').onchange=()=>{tour.stop();relocate($('walkStart').value);};
  window.addEventListener('keydown',e=>{if(!walking||['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;if(e.code==='Escape'){setView('overview');return;}if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)){e.preventDefault();keys.add(e.code);}if(e.code==='KeyE'){const d=doors.filter(d=>Math.hypot(d.x-walk.x,d.z-walk.z)<5).sort((a,b)=>Math.hypot(a.x-walk.x,a.z-walk.z)-Math.hypot(b.x-walk.x,b.z-walk.z))[0];if(d)setDoorMode(d.id,d.mode==='open'?'closed':'open');}});
@@ -221,9 +225,9 @@ export function createOperations(ctx){
  document.querySelectorAll('[data-walk]').forEach(e=>{e.onpointerdown=ev=>{ev.preventDefault();keys.add(e.dataset.walk);e.setPointerCapture(ev.pointerId);};e.onpointerup=e.onpointercancel=()=>keys.delete(e.dataset.walk);});
  function update(t,realDt){const old=lastTime;seek(t);if(t===old)doorsStep(realDt);if(walking){if(tour.state().active){if(tour.state().paused)intent.x=intent.z=0;for(let n=0;n<5;n++)tour.update(realDt/5);if(!tour.state().active)intent.x=intent.z=0;}else{const f=(keys.has('KeyW')||keys.has('ArrowUp')?1:0)-(keys.has('KeyS')||keys.has('ArrowDown')?1:0),s=(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),norm=Math.hypot(f,s)||1;intent.x=Math.sin(walk.yaw)*f-Math.cos(walk.yaw)*s;intent.z=Math.cos(walk.yaw)*f+Math.sin(walk.yaw)*s;walkMove(f/norm,s/norm,realDt);}}}
  function doorState(){return doors.map(d=>({id:d.id,x:d.x,z:d.z,width:d.w,rotation:d.ry,mode:d.mode,open:d.fraction,safety:d.safety}));}
- function staffState(){return staff.map(f=>({x:f.g.position.x,z:f.g.position.z,heading:f.g.rotation.y,loaded:f.cargo.visible,phase:f.phase,clock:f.clock,deposit:f.deposit.visible}));}
+ function staffState(){return staff.map(f=>({x:f.g.position.x,z:f.g.position.z,heading:f.g.rotation.y,loaded:f.cargo.visible,phase:f.phase,clock:f.clock,deposit:f.deposit.visible,withPalletTruck:f.hasCart,speed:1.65}));}
  function validateWalls(){return [...forklifts,...staff].map((f,index)=>({index,hit:bodyWallHit(f)})).filter(f=>f.hit);}
  function staffStatus(){return staff.map((f,i)=>`<div class="activity"><span>PT-0${i+1}</span><em>${tr(f.phase)}</em></div>`).join('');}
  reset();refreshDoorUI();
- return {update,seek,reset,setDoorMode,doorState,staffState,staffStatus,refreshDoorUI,ramps,floorHeight,enterWalk,exitWalk,relocate,walkMove,tour,canPlan,walkState:()=>({...walk,active:walking,tour:tour.state()}),validateWalls,bodyHits,staticWalls,stage:()=>stage,dispatched:()=>dispatchCount,clocks:()=>forklifts.map(f=>f.clock)};
+ return {update,seek,reset,setDoorMode,doorState,staffState,staffStatus,refreshDoorUI,ramps,floorHeight,enterWalk,exitWalk,relocate,walkMove,tour,canPlan,walkState:()=>({...walk,active:walking,tour:tour.state()}),validateWalls,bodyHits,staticWalls,stage:()=>0,dispatched:()=>dispatchCount,clocks:()=>forklifts.map(f=>f.clock)};
 }
