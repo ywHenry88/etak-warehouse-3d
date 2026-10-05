@@ -27,7 +27,7 @@ export function createActorModels(M){
  const material=(color,roughness=.75,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
  const navy=material('#293e50'),vests=[material('#c8ce43'),material('#c99e39')],reflective=material('#d2d8cb',.42,.15);
  const skins=['#ba8b69','#d2ab88','#91684f'].map(c=>material(c)),boot=material('#262b2c',.85),red=material('#a9382e',.38,.3),steel=material('#8c969b',.32,.7);
- const helmet=material('#dfb04c',.4),seam=material('#233038',.85);
+ const helmet=material('#dfb04c',.4),seam=material('#233038',.85),coat=material('#bf9447',.95),stitch=material('#987740',.98);
  function mesh(parent,geometry,mat,x,y,z,sx=1,sy=1,sz=1){const m=new THREE.Mesh(geometry,mat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
  function round(parent,mat,x,y,z,w,h,d,r=.04){const key=[w,h,d,r].join(',');if(!cache.has(key))cache.set(key,new RoundedBoxGeometry(w,h,d,1,r));return mesh(parent,cache.get(key),mat,x,y,z);}
  const oval=(p,m,x,y,z,a,b,c)=>mesh(p,sphere,m,x,y,z,a,b,c);
@@ -38,20 +38,24 @@ export function createActorModels(M){
   const m=mesh(parent,cache.get(key),mat,...av.add(bv).multiplyScalar(.5).toArray(),1,delta.length(),1);
   m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());return m;
  }
- function worker(index=0,seated=false){
+ function worker(index=0,seated=false,coldCoat=false){
   const root=new THREE.Group(),torso=new THREE.Group();root.add(torso);const skin=skins[index%skins.length],vest=vests[index%2];
   // Broad shoulders taper into a waist; ellipsoids avoid square torsos and heads.
   oval(torso,navy,0,1.16,0,.215,.30,.125);
-  oval(torso,vest,0,1.18,.013,.222,.278,.13);
+  oval(torso,coldCoat?coat:vest,0,coldCoat?1.13:1.18,.013,coldCoat?.23:.222,coldCoat?.33:.278,coldCoat?.16:.13);
   oval(torso,navy,0,.865,0,.175,.12,.12);
   for(const side of [-1,1]){
-   round(torso,reflective,side*.105,1.29,.128,.035,.27,.009,.003);
-   round(torso,reflective,side*.105,1.29,-.112,.035,.27,.009,.003);
+   round(torso,reflective,side*.105,1.29,coldCoat?.157:.128,.035,.27,.009,.003);
+   round(torso,reflective,side*.105,1.29,coldCoat?-.139:-.112,.035,.27,.009,.003);
   }
-  round(torso,reflective,0,1.065,.126,.34,.034,.012,.004);
-  round(torso,reflective,0,1.065,-.12,.34,.034,.012,.004);
-  box(torso,seam,0,1.22,.147,.008,.36,.006);
-  round(torso,navy,.105,1.17,.14,.09,.072,.016,.01);
+  round(torso,reflective,0,1.065,coldCoat?.167:.126,.34,.034,.012,.004);
+  round(torso,reflective,0,1.065,coldCoat?-.143:-.12,.34,.034,.012,.004);
+  box(torso,seam,0,1.17,coldCoat?.18:.147,.008,coldCoat?.52:.36,.006);
+  round(torso,coldCoat?coat:navy,.105,1.17,coldCoat?.17:.14,.09,.072,.016,.01);
+  if(coldCoat){
+   for(const side of [-1,1])round(torso,coat,side*.076,1.435,0,.09,.12,.18,.033);
+   for(const y of [.91,1.0,1.13,1.25])box(torso,stitch,0,y,.169,.33,.006,.004);
+  }
   mesh(torso,tube,skin,0,1.465,0,.062,.11,.062);
   oval(torso,skin,0,1.605,.012,.105,.142,.108);
   oval(torso,skin,0,1.605,.118,.027,.039,.024);
@@ -60,6 +64,17 @@ export function createActorModels(M){
   mesh(torso,cache.get(hatKey),helmet,0,1.715,0,.133,.105,.14);
   oval(torso,helmet,0,1.712,.013,.145,.016,.166);
   round(torso,helmet,0,1.794,0,.025,.026,.18,.009);
+  const coatTail=coldCoat?new THREE.Group():null;
+  if(coatTail){
+   coatTail.position.y=.86;root.add(coatTail);
+   round(coatTail,coat,0,-.10,0,.45,.48,.34,.06);
+   for(const side of [-1,1]){
+    round(coatTail,coat,side*.118,-.025,.178,.13,.12,.019,.012);
+    round(coatTail,reflective,side*.116,-.25,.17,.20,.025,.009,.003);
+   }
+   box(coatTail,seam,0,-.105,.176,.008,.44,.006);
+   mergeRigid(coatTail);
+  }
   const legs=[],arms=[];
   for(const side of [-1,1]){
    const hip=new THREE.Group();hip.position.set(side*.105,.86,0);root.add(hip);
@@ -71,15 +86,17 @@ export function createActorModels(M){
    round(knee,seam,0,-.47,.052,.15,.025,.274,.008);
    mergeRigid(hip);mergeRigid(knee);legs.push({hip,knee});
    const shoulder=new THREE.Group();shoulder.position.set(side*.215,1.36,0);root.add(shoulder);
-   oval(shoulder,navy,0,0,0,.075,.09,.085);
-   link(shoulder,navy,[0,0,0],[side*.018,-.25,0],.074,.054);
+   oval(shoulder,coldCoat?coat:navy,0,0,0,coldCoat?.085:.075,.09,.085);
+   link(shoulder,coldCoat?coat:navy,[0,0,0],[side*.018,-.25,0],coldCoat?.084:.074,coldCoat?.065:.054);
    const elbow=new THREE.Group();elbow.position.set(side*.018,-.25,0);shoulder.add(elbow);
-   link(elbow,navy,[0,0,0],[0,-.235,0],.054,.039);
-   oval(elbow,skin,0,-.265,0,.041,.06,.035);
+   link(elbow,coldCoat?coat:navy,[0,0,0],[0,-.235,0],coldCoat?.065:.054,coldCoat?.045:.039);
+   oval(elbow,coldCoat?boot:skin,0,-.265,0,.041,.06,.035);
    mergeRigid(shoulder);mergeRigid(elbow);arms.push({shoulder,elbow});
   }
   mergeRigid(torso);
   function pose(time=0,pushing=false){
+   // The continuous coat hem drapes across the lap when seated, sways on foot.
+   if(coatTail){coatTail.rotation.x=seated?-1.22:-.04+Math.sin(time*9)*.035;coatTail.rotation.z=seated?0:Math.sin(time*9)*.015;}
    if(seated){root.position.set(0,.23,-.27);torso.rotation.x=-.04;legs.forEach(({hip,knee})=>{hip.rotation.x=-1.4;knee.rotation.x=1.5;});}
    else{torso.position.y=Math.sin(time*18)*.012;legs.forEach(({hip,knee},i)=>{const phase=time*9+i*Math.PI;hip.rotation.x=Math.sin(phase)*.38;knee.rotation.x=Math.max(0,Math.cos(phase))*.55;});}
    arms.forEach(({shoulder,elbow},i)=>{
@@ -87,7 +104,7 @@ export function createActorModels(M){
     elbow.rotation.x=seated?-.88:pushing?-.72:-.16;
    });
   }
-  pose();return {root,pose};
+  pose();return {root,pose,coldCoat};
  }
  function wheel(parent,x,y,z,r=.33,w=.19){
   const g=new THREE.Group();g.position.set(x,y,z);parent.add(g);
@@ -111,7 +128,7 @@ export function createActorModels(M){
   link(g,steel,[-.20,.14,-.14],[.20,.14,-.14],.075);
   return mergeRigid(g);
  }
- function forklift(index,dynamicPallet){
+ function forklift(index,dynamicPallet,coldCoat=false){
   const g=new THREE.Group(),wheels=[];
   round(g,red,0,.58,-.35,1.1,.66,1.50,.16);
   round(g,red,0,.73,-.97,1.17,.72,.49,.17);
@@ -144,8 +161,8 @@ export function createActorModels(M){
   for(const x of [-.34,.34]){box(carriage,steel,x,.04,.61,.11,.085,1.22);box(carriage,steel,x,.29,.06,.12,.58,.075);}
   mergeRigid(carriage);
   const cargo=dynamicPallet();cargo.position.set(0,.09,.68);carriage.add(cargo);
-  const driver=worker(index,true);g.add(driver.root);
-  return {g,wheels,carriage,cargo};
+  const driver=worker(index,true,coldCoat);g.add(driver.root);
+  return {g,wheels,carriage,cargo,coldCoat};
  }
  function stats(root){let triangles=0,draws=0;root.traverse(m=>{if(m.isMesh){triangles+=(m.geometry.index?m.geometry.index.count:m.geometry.attributes.position.count)/3;draws++;}});return {triangles,draws};}
  return {worker,palletTruck,forklift,round,mergeRigid,stats};

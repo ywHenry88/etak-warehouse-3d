@@ -1,4 +1,8 @@
-// Surface finishes and fixed lighting keep the frozen rooms clear to walk through.
+export function isFrozenZone(x,z){
+ return (x>.4&&x<30.1&&z>.25&&z<20.65)||(x>1.8&&x<30.6&&z>=20.65&&z<35&&(z<31.3||x>15.15));
+}
+
+// Surface finishes and fixed lighting distinguish the frozen rooms.
 export function createColdAppearance(THREE){
  const canvas=document.createElement('canvas');canvas.width=canvas.height=256;
  const ctx=canvas.getContext('2d');ctx.fillStyle='#c2d5df';ctx.fillRect(0,0,256,256);

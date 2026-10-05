@@ -1,3 +1,4 @@
+import {isFrozenZone} from './cold-appearance.js';
 import {createTour} from './tour.js';
 import {createMobileControls} from './mobile-controls.js';
 import {onLanguage} from './i18n.js';
@@ -59,7 +60,7 @@ export function createOperations(ctx){
  function staffMover(i,points){
   const g=new THREE.Group(),cart=actorModels.palletTruck();world.add(g);g.add(cart);
   const cargo=dynamicPallet();cargo.position.set(0,.04,.70);cart.add(cargo);
-  const worker=actorModels.worker(i),person=worker.root;person.position.set(0,0,-1.17);g.add(person);
+  const worker=actorModels.worker(i,false,points.some(([x,z])=>isFrozenZone(x,z))),person=worker.root;person.position.set(0,0,-1.17);g.add(person);
   const pickup=dynamicPallet();pickup.position.set(points[0][0],floorHeight(...points[0]),points[0][1]+.7);world.add(pickup);
   const deposit=dynamicPallet();deposit.position.set(i<2?47.0:points.at(-1)[0],i<2?.015:floorHeight(...points.at(-1)),i<2?dockZ[i?3:1]:points.at(-1)[1]+.70);world.add(deposit);deposit.visible=false;
   const result={g,cart,cargo,person,worker,pickup,deposit,points,index:i,staff:true,distance:points.slice(1).reduce((sum,p,j)=>sum+Math.hypot(p[0]-points[j][0],p[1]-points[j][1]),0),clock:0,phase:'Next collection',done:false};staff.push(result);return result;
@@ -220,7 +221,7 @@ export function createOperations(ctx){
  document.querySelectorAll('[data-walk]').forEach(e=>{e.onpointerdown=ev=>{ev.preventDefault();keys.add(e.dataset.walk);e.setPointerCapture(ev.pointerId);};e.onpointerup=e.onpointercancel=()=>keys.delete(e.dataset.walk);});
  function update(t,realDt){const old=lastTime;seek(t);if(t===old)doorsStep(realDt);if(walking){if(tour.state().active){if(tour.state().paused)intent.x=intent.z=0;for(let n=0;n<5;n++)tour.update(realDt/5);if(!tour.state().active)intent.x=intent.z=0;}else{const f=(keys.has('KeyW')||keys.has('ArrowUp')?1:0)-(keys.has('KeyS')||keys.has('ArrowDown')?1:0),s=(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),norm=Math.hypot(f,s)||1;intent.x=Math.sin(walk.yaw)*f-Math.cos(walk.yaw)*s;intent.z=Math.cos(walk.yaw)*f+Math.sin(walk.yaw)*s;walkMove(f/norm,s/norm,realDt);}}}
  function doorState(){return doors.map(d=>({id:d.id,x:d.x,z:d.z,width:d.w,rotation:d.ry,mode:d.mode,open:d.fraction,safety:d.safety}));}
- function staffState(){return staff.map(f=>({x:f.g.position.x,z:f.g.position.z,heading:f.g.rotation.y,loaded:f.cargo.visible,phase:f.phase,clock:f.clock,deposit:f.deposit.visible,withPalletTruck:f.hasCart,speed:1.65}));}
+ function staffState(){return staff.map(f=>({coldCoat:f.worker.coldCoat,x:f.g.position.x,z:f.g.position.z,heading:f.g.rotation.y,loaded:f.cargo.visible,phase:f.phase,clock:f.clock,deposit:f.deposit.visible,withPalletTruck:f.hasCart,speed:1.65}));}
  function validateWalls(){return [...forklifts,...staff].map((f,index)=>({index,hit:bodyWallHit(f)})).filter(f=>f.hit);}
  function staffStatus(){return staff.map((f,i)=>`<div class="activity"><span>PT-0${i+1}</span><em>${tr(f.phase)}</em></div>`).join('');}
  reset();refreshDoorUI();
