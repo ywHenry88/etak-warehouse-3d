@@ -2,7 +2,7 @@ import {createTour} from './tour.js';
 import {createMobileControls} from './mobile-controls.js';
 import {onLanguage} from './i18n.js';
 export function createOperations(ctx){
- const {THREE,world,camera,controls,canvas,M,box,bar,cylinder,sign,dynamicPallet,doors,forklifts,updateForklift,pathAt,wallSegments,columnRects,storageFootprints,truckGroups,dockZ,tr,getView,setView,showInterior}=ctx;
+ const {THREE,world,camera,controls,canvas,M,actorModels,box,bar,cylinder,sign,dynamicPallet,doors,forklifts,updateForklift,pathAt,wallSegments,columnRects,storageFootprints,truckGroups,dockZ,tr,getView,setView,showInterior}=ctx;
  const $=id=>document.getElementById(id),clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
  const ramps=[{id:'rampNorth',x0:42,x1:54,z:-.55,width:1.8,high:0,low:-1.5},{id:'rampSouth',x0:42,x1:54,z:46.1,width:1.8,high:0,low:-1.5}];
  const extraWalls=[];
@@ -57,18 +57,12 @@ export function createOperations(ctx){
  }
  const staff=[];
  function staffMover(i,points){
-  const g=new THREE.Group(),cart=new THREE.Group();world.add(g);g.add(cart);box(cart,M.red,0,.26,0,.64,.44,.53);
-  for(const x of [-.24,.24]){box(cart,M.red,x,.095,.62,.17,.12,1.65);const w=cylinder(cart,M.rubber,x,.085,1.25,.085,.15,Math.PI/2);}
-  bar(cart,M.dark,[0,.39,-.13],[0,1.05,-.74],.055);box(cart,M.dark,0,1.05,-.74,.43,.085,.08);
+  const g=new THREE.Group(),cart=actorModels.palletTruck();world.add(g);g.add(cart);
   const cargo=dynamicPallet();cargo.position.set(0,.04,.70);cart.add(cargo);
-  const person=new THREE.Group();person.position.set(0,0,-1.17);g.add(person);
-  const coat=new THREE.MeshStandardMaterial({color:i?'#e5b448':'#b1c958',roughness:.8}),navy=new THREE.MeshStandardMaterial({color:'#344253',roughness:.9});
-  box(person,coat,0,1.12,0,.46,.62,.27);for(const z of [-.143,.143])box(person,M.white,0,1.12,z,.46,.035,.008);
-  cylinder(person,new THREE.MeshStandardMaterial({color:'#bd9576',roughness:.8}),0,1.61,0,.13,.25);cylinder(person,M.yellow,0,1.765,0,.17,.09);
-  const legs=[];for(const x of [-.13,.13]){const leg=new THREE.Group();leg.position.set(x,.83,0);person.add(leg);box(leg,navy,0,-.35,0,.17,.70,.20);box(leg,M.dark,0,-.76,.075,.20,.12,.33);legs.push(leg);bar(person,coat,[x*2,1.36,0],[x*2,1.06,.42],.12);}
+  const worker=actorModels.worker(i),person=worker.root;person.position.set(0,0,-1.17);g.add(person);
   const pickup=dynamicPallet();pickup.position.set(points[0][0],floorHeight(...points[0]),points[0][1]+.7);world.add(pickup);
   const deposit=dynamicPallet();deposit.position.set(i<2?47.0:points.at(-1)[0],i<2?.015:floorHeight(...points.at(-1)),i<2?dockZ[i?3:1]:points.at(-1)[1]+.70);world.add(deposit);deposit.visible=false;
-  const result={g,cart,cargo,person,legs,pickup,deposit,points,index:i,staff:true,distance:points.slice(1).reduce((sum,p,j)=>sum+Math.hypot(p[0]-points[j][0],p[1]-points[j][1]),0),clock:0,phase:'Next collection',done:false};staff.push(result);return result;
+  const result={g,cart,cargo,person,worker,pickup,deposit,points,index:i,staff:true,distance:points.slice(1).reduce((sum,p,j)=>sum+Math.hypot(p[0]-points[j][0],p[1]-points[j][1]),0),clock:0,phase:'Next collection',done:false};staff.push(result);return result;
  }
  staffMover(0,[[39.1,8.0],[39.1,6.65],[45.6,6.65]]);
  staffMover(1,[[35.0,42.25],[45.6,42.25]]);
@@ -85,7 +79,7 @@ export function createOperations(ctx){
   f.g.position.set(p.x,floorHeight(p.x,p.z),p.z);f.g.rotation.y=p.heading+(outbound?0:Math.PI);
   f.cargo.visible=withCart&&outbound;f.pickup.visible=false;f.deposit.visible=false;
   f.phase=withCart?(outbound?'Pushing pallet truck':'Returning empty'):'Walking to next task';
-  f.legs.forEach((leg,i)=>leg.rotation.x=Math.sin(time*9+i*Math.PI)*.42);
+  f.worker.pose(time,withCart);
   f.duration=duration;f.travelPhase=phase;
  }
  // Every actor runs its own continuous circuit; no dispatch-group idle stages.

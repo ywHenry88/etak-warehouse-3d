@@ -1,5 +1,6 @@
 export let language='zh-Hant';
 const zh={
+ 'Frames per second':'每秒影格',
  'Red route start':'紅線起點（西南面）','Red route end':'紅線終點（南面出貨區）','W3 loading dock':'W3 上落貨區','North freezer turnaround':'北面冷凍庫折返點','North freezer return aisle':'北面冷凍庫回程','Cold room passage':'冷藏與冷凍庫連接通道','Frozen room cross aisle':'冷凍庫橫向通道','Frozen room turnaround':'冷凍庫折返點','Frozen room return aisle':'冷凍庫回程','Frozen room, east return':'冷凍庫東面出口','South loading area exit':'南面上落貨區出口',
  'Northwest empty area':'西北面空置區','Northwest cross aisle':'西北面橫向通道','Walking to next task':'步行前往工作位置','W2 / W3 rapid door':'W2／W3 快速門','W2 / W1 rapid door':'W2／W1 快速門','W3 / LOADING DOCK':'W3／上落貨區',
  'NORTH DISPATCH · W3':'北面出貨區 · W3','North dispatch door':'北面出貨區門','W2 · CHILLED / 4–10°C':'W2 · 冷藏區 / 4–10°C','W6 · CHILLED / 4–10°C':'W6 · 冷藏區 / 4–10°C','Open connection to W6':'開放連通 W6','Open connection to W2':'開放連通 W2','W2 chilled area, north':'W2 冷藏區北端','W2 chilled area, south':'W2 冷藏區南端',
