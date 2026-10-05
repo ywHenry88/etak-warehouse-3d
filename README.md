@@ -16,6 +16,7 @@ Traditional Chinese / English interactive Three.js warehouse, based on the suppl
 - **W3** is a rack-free loading room with protected walls and a stainless bench, informed by C13/C14. **W2 and W6 are chilled (4–10°C)** with the same +0.25 m floor and an open connection. Automatic rapid doors separate W2/W3 and W2/W1; short transitions are at those boundaries, not between W2/W6.
 - Staff have articulated knees and elbows, shaped workwear, faces and hard hats. Forklifts have rounded bodywork, seated operators, wheel hubs, hydraulics and controls; pallet trucks and truck cabs also use shaped parts. Shared geometry/materials and merged rigid parts limit rendering cost. Approximate triangle budgets: 3,624 per standard worker / 4,440 with a long coat, 9,544 per forklift including its driver / 10,360 with a coated driver (excluding cargo), and 604 per pallet truck.
 - The small top-right counter shows measured **FPS and milliseconds per frame**, independently of simulation speed. Rendering automatically adjusts resolution, shadows and ambient occlusion when frame rate stays low; phone/touch layouts start with lighter settings. Actual FPS depends on hardware, browser, temperature and scene view.
+- **Ultra** activates on any device after two consecutive 1.5-second samples above 80 FPS. It uses a 1.5–2× render scale, 4096-pixel shadows, ambient occlusion and antialiasing. The counter also shows the active quality. If Ultra stays below 60 FPS for two samples, it drops to High; a 15-second promotion cooldown prevents rapid switching.
 - The supplied ETAK banner is mounted on the central wall facing the truck apron. The five foreground parking columns have been removed for visibility.
 - 27 camera views include 25 reference images for 24 cameras. C04/C07/C08 have plan locations only; C14 has two reference images.
 
@@ -45,6 +46,7 @@ npm test
 node test_v8_random.cjs
 node test_actors.cjs
 node test_cold_mist.cjs
+node test_performance.cjs
 ```
 
 The current browser test uses an installed Microsoft Edge. It checks four forklifts and eight staff, randomized starts, mixed pallet-truck use, continuous work, route/wall and closed-door clearance, tours at multiple traffic phases, W2/W6 levels, both new doors, rack-free W3 and the compact mobile controls. Set `WAREHOUSE_URL` to test a deployed site. Detailed output is saved locally in `final-validation.json`. Earlier version-specific tests have been superseded by `test_v8.cjs`.

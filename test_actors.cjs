@@ -23,8 +23,8 @@ const {chromium}=require('playwright'),{build}=require('esbuild'),assert=require
   await p.goto(process.env.WAREHOUSE_URL||'file:///C:/github/etak-warehouse-3d/index.html');await p.waitForFunction(()=>warehouse?.ready);
   await p.evaluate(()=>{warehouse.setView('walk',true);warehouse.operations.relocate('north');});
   await p.waitForTimeout(12000);const desktop=await p.evaluate(()=>warehouse.getState().performance);await p.screenshot({path:'actors-desktop-view.png'});
-  assert.ok(desktop.fps>0);assert.ok(desktop.drawCalls>0);assert.ok(desktop.pixelRatio<=1.35);assert.match(await p.locator('#fpsDisplay').textContent(),/FPS/);
+  assert.ok(desktop.fps>0);assert.ok(desktop.drawCalls>0);assert.ok(desktop.pixelRatio<=2);assert.match(await p.locator('#fpsDisplay').textContent(),/FPS/);
   const mobile=await b.newPage({viewport:{width:390,height:844},deviceScaleFactor:3,isMobile:true,hasTouch:true});mobile.on('pageerror',e=>errors.push(e.message));await mobile.goto(process.env.WAREHOUSE_URL||'file:///C:/github/etak-warehouse-3d/index.html');await mobile.waitForFunction(()=>warehouse?.ready);await mobile.locator('#menu').click();await mobile.locator('#tourLaunch').click();await mobile.waitForTimeout(12000);const mobilePerf=await mobile.evaluate(()=>warehouse.getState().performance);await mobile.screenshot({path:'actors-mobile-view.png'});
-  assert.ok(mobilePerf.fps>0);assert.ok(mobilePerf.pixelRatio<=1);assert.ok((await mobile.locator('#walkPanel').boundingBox()).height<115);assert.deepEqual(errors,[]);console.log('Measured headless Edge (not physical phone)',JSON.stringify({desktop,mobile:mobilePerf}));
+  assert.ok(mobilePerf.fps>0);assert.ok(mobilePerf.pixelRatio<=2);assert.ok((await mobile.locator('#walkPanel').boundingBox()).height<115);assert.deepEqual(errors,[]);console.log('Measured headless Edge (not physical phone)',JSON.stringify({desktop,mobile:mobilePerf}));
  }finally{await b.close();}
 })().catch(e=>{console.error(e);process.exit(1)});
