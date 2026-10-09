@@ -1,5 +1,5 @@
 // Measure real animation-frame intervals, independently of simulation speed.
-export function createPerformance({renderer,composer,ao,smaa,sun,tr}){
+export function createPerformance({renderer,composer,ao,smaa,sun,tr,onQualityChange}){
  const compact=matchMedia('(pointer:coarse)').matches||innerWidth<700;
  const profiles=[{name:'Eco',ratio:.75,shadow:0,ao:false},{name:'Balanced',ratio:1,shadow:1024,ao:false},{name:'High',ratio:1.35,shadow:2048,ao:true},{name:'Ultra',ratio:2,shadow:4096,ao:true}];
  let level=compact?1:2,last=null,start=null,frames=0,fps=0,slow=0,fast=0,ultraReady=0,cooldown=0,ratio=1,triangles=0,calls=0;
@@ -11,6 +11,7 @@ export function createPerformance({renderer,composer,ao,smaa,sun,tr}){
   renderer.shadowMap.enabled=profile.shadow>0;ao.enabled=profile.ao;smaa.enabled=level>0;
   if(profile.shadow&&sun.shadow.mapSize.x!==profile.shadow){sun.shadow.map?.dispose();sun.shadow.map=null;sun.shadow.mapSize.set(profile.shadow,profile.shadow);}
   renderer.shadowMap.needsUpdate=true;slow=fast=ultraReady=0;
+  onQualityChange?.(profile.name);
  }
  function reset(){last=start=null;frames=0;slow=fast=ultraReady=0;}
  document.addEventListener('visibilitychange',reset);

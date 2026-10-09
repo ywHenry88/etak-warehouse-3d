@@ -20,6 +20,7 @@ Traditional Chinese / English interactive Three.js warehouse, based on the suppl
 - Staff have articulated knees and elbows, shaped workwear, faces and hard hats. Forklifts have rounded bodywork, seated operators, wheel hubs, hydraulics and controls; pallet trucks and truck cabs also use shaped parts. Shared geometry/materials and merged rigid parts limit rendering cost. Approximate triangle budgets: 3,624 per standard worker / 4,440 with a long coat, 9,544 per forklift including its driver / 10,360 with a coated driver (excluding cargo), and 604 per pallet truck.
 - The small top-right counter shows measured **FPS and milliseconds per frame**, independently of simulation speed. Rendering automatically adjusts resolution, shadows and ambient occlusion when frame rate stays low; phone/touch layouts start with lighter settings. Actual FPS depends on hardware, browser, temperature and scene view.
 - **Ultra** activates on any device after two consecutive 1.5-second samples above 80 FPS. It uses a 1.5–2× render scale, 4096-pixel shadows, ambient occlusion and antialiasing. The counter also shows the active quality. If Ultra stays below 60 FPS for two samples, it drops to High; a 15-second promotion cooldown prevents rapid switching.
+- Ultra adds shared 1024px colour/normal/roughness maps for concrete, pallet wood, carton fibres and frosted surfaces, plus 512px metal and workwear microdetail. Up to 16× anisotropic filtering keeps angled surfaces clear; signs use 1024×256 textures. Environment reflections, shadow contact bias and ambient occlusion are tuned for this mode. Maps are generated locally on first promotion, require no downloads, and add no scene triangles or draw calls. Downgrading restores the original materials and releases the extra GPU textures; cached canvases support re-entry. Extra texture/shader cost still depends on the device; automatic FPS fallback remains active.
 - The supplied ETAK banner is mounted on the central wall facing the truck apron. The five foreground parking columns have been removed for visibility.
 - 27 camera views include 25 reference images for 24 cameras. C04/C07/C08 have plan locations only; C14 has two reference images.
 
@@ -50,6 +51,7 @@ node test_v8_random.cjs
 node test_actors.cjs
 node test_cold_mist.cjs
 node test_performance.cjs
+node test_ultra_detail.cjs
 node test_tour_flight.cjs
 node test_tour_audio.cjs
 ```
