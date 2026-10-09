@@ -29,7 +29,10 @@ export function createActorModels(M){
  const skins=['#ba8b69','#d2ab88','#91684f'].map(c=>material(c)),boot=material('#262b2c',.85),red=material('#a9382e',.38,.3),steel=material('#8c969b',.32,.7);
  const helmet=material('#dfb04c',.4),seam=material('#233038',.85),coat=material('#bf9447',.95),stitch=material('#987740',.98);
  for(const m of [navy,...vests,coat,stitch])m.userData.ultraSurface='fabric';
- for(const m of [red,steel,helmet])m.userData.ultraSurface='metal';
+ red.userData.ultraSurface='paint';steel.userData.ultraSurface='metal';helmet.userData.ultraSurface='pvc';
+ for(const m of skins)m.userData.ultraSurface='skin';
+ for(const m of [boot,seam])m.userData.ultraSurface='rubber';
+ reflective.userData.ultraSurface='fabric';
  function mesh(parent,geometry,mat,x,y,z,sx=1,sy=1,sz=1){const m=new THREE.Mesh(geometry,mat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
  function round(parent,mat,x,y,z,w,h,d,r=.04){const key=[w,h,d,r].join(',');if(!cache.has(key))cache.set(key,new RoundedBoxGeometry(w,h,d,1,r));return mesh(parent,cache.get(key),mat,x,y,z);}
  const oval=(p,m,x,y,z,a,b,c)=>mesh(p,sphere,m,x,y,z,a,b,c);

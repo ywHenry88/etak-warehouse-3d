@@ -55,7 +55,7 @@ function instance(material,x,y,z,sx,sy,sz,ry=0){let a=batches.get(material);if(!
 function box(parent,material,x,y,z,sx,sy,sz){const m=new THREE.Mesh(boxGeo,material);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
 function cylinder(parent,material,x,y,z,r,h,rot=0){const m=new THREE.Mesh(cylGeo,material);m.position.set(x,y,z);m.scale.set(r,h,r);m.rotation.z=rot;m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
 function bar(parent,material,a,b,width=.06){const av=new THREE.Vector3(...a),bv=new THREE.Vector3(...b),m=new THREE.Mesh(boxGeo,material);m.position.copy(av).add(bv).multiplyScalar(.5);m.scale.set(width,av.distanceTo(bv),width);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),bv.sub(av).normalize());m.castShadow=true;parent.add(m);return m;}
-function paint(x,z,w,d,color='#efd178',y=.026){return box(world,mat(color,.94),x,y,z,w,.012,d);}
+function paint(x,z,w,d,color='#efd178',y=.026){const m=mat(color,.94);m.userData.ultraSurface='paint';return box(world,m,x,y,z,w,.012,d);}
 function labelTexture(text,bg='#243945',fg='#f1eee3',w=512,h=128){const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.fillStyle=bg;g.fillRect(0,0,w,h);g.fillStyle=fg;g.font=`600 ${Math.floor(h*.46)}px "Microsoft JhengHei", Arial`;g.textAlign='center';g.textBaseline='middle';g.fillText(text,w/2,h/2,w-24);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;}
 const signRecords=[];
 function sign(parent,text,x,y,z,w=2,h=.5,ry=0,bg){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:labelTexture(tr(text),bg),side:THREE.DoubleSide}));m.position.set(x,y,z);m.rotation.y=ry;parent.add(m);signRecords.push({material:m.material,text,bg});return m;}
@@ -325,8 +325,10 @@ function refreshUltraSigns(){
 }
 ultraDetail=createUltraDetail({scene,renderer,ao,sun,materials:[
  [M.floor,'concrete'],[M.cold,'concrete'],[M.wood,'wood'],[M.carton,'carton'],[M.carton2,'carton'],[whiteCarton,'carton'],
- [frozenAppearance.floor,'frost'],[frozenAppearance.carton,'frost'],
- ...[M.blue,M.beam,M.steel,M.red,M.yellow,M.insulated].map(m=>[m,'metal'])
+ [frozenAppearance.floor,'frost'],[frozenAppearance.carton,'carton'],[M.wall,'wall'],[M.edge,'concrete'],
+ [M.insulated,'panel'],[M.steel,'metal'],[M.rubber,'rubber'],[M.tape,'tape'],[M.glass,'glass'],
+ [rapidBlue,'pvc'],[bluePallet,'pvc'],[darkCrate,'pvc'],[cameraBody,'pvc'],
+ ...[M.blue,M.beam,M.red,M.yellow,M.white,M.dark,M.black,M.green].map(m=>[m,'paint'])
 ],onChange:refreshUltraSigns});
 ultraDetail.apply(performanceMonitor.state().quality);
 onLanguage(refreshUltraSigns);
