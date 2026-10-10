@@ -54,5 +54,3 @@ const {chromium}=require('playwright'),{build}=require('esbuild'),fs=require('no
   assert.deepEqual(errors,[]);console.log('PASS Ultra actor integration',JSON.stringify({high,ultra,down,again}));
  }finally{await browser.close();fs.unlinkSync(file);}
 })().catch(e=>{console.error(e);process.exit(1);});
-
-
