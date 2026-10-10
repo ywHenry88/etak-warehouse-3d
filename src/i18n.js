@@ -1,5 +1,6 @@
 export let language='zh-Hant';
 const zh={
+ 'Auto':'自動','Rendering quality':'畫質','Auto adjusts quality to FPS. Manual selection stays fixed.':'自動模式按 FPS 調整畫質；手動選擇會維持指定畫質。',
  'Language':'語言 / Language','Mute sound':'關閉音樂及音效','Unmute sound':'開啟音樂及音效',
  'Loading docks · flying to route start':'上落貨區 · 飛往導覽起點','Flying back to loading docks':'飛回上落貨區',
  'Loading docks → red route → loading docks':'上落貨區 → 紅線巡覽 → 上落貨區',
