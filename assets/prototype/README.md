@@ -43,9 +43,9 @@ The full pilot group uses 49,148 triangles and 63 main scene draw primitives
 versus 15,664 / 60 for the legacy group with the same environment. Shadow passes
 are additional. Increased visual detail has a real cost.
 
-Before full-warehouse integration: consolidate vehicle trim/decal materials,
-use the low LOD at distance, instance pallet loads, add driver/pushing poses,
-and measure the four-forklift/eight-worker warehouse on target hardware.
+The main warehouse now integrates these assets in Ultra mode with distance LOD
+and driver/pushing poses; see [runtime integration](../actors/README.md).
+Further material consolidation and measurement on target hardware remain useful.
 This is a reviewable visual pilot, not manufacturer CAD or a completed
 photorealistic warehouse rebuild. Capacity and dimensions are not verified.
 

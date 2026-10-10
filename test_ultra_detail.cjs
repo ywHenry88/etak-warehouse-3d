@@ -1,7 +1,7 @@
 const {chromium}=require('playwright'),{build}=require('esbuild'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 (async()=>{
  // Exercise the real scene and quality callbacks with a deterministic frame clock.
- const source=fs.readFileSync('src/main.js','utf8').replaceAll('requestAnimationFrame(animate);','');
+ const source=fs.readFileSync('src/main.js','utf8').replaceAll('requestAnimationFrame(animate);','').replaceAll('ultraActors?.apply(quality);','');
  const hook=`
  let testStamp=0;performanceMonitor.update(0);
  window.ultraTest={

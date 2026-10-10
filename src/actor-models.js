@@ -23,6 +23,7 @@ export function mergeStaticStructure(group){
 }
 
 export function createActorModels(M){
+ const registry={workers:[],forklifts:[],carts:[]};
  const cache=new Map(),sphere=new THREE.SphereGeometry(1,10,7),tube=new THREE.CylinderGeometry(1,1,1,8),boxGeo=new THREE.BoxGeometry(1,1,1);
  const material=(color,roughness=.75,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
  const navy=material('#293e50'),vests=[material('#c8ce43'),material('#c99e39')],reflective=material('#d2d8cb',.42,.15);
@@ -44,6 +45,7 @@ export function createActorModels(M){
   m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());return m;
  }
  function worker(index=0,seated=false,coldCoat=false){
+  const motion={time:0,pushing:false};
   const root=new THREE.Group(),torso=new THREE.Group();root.add(torso);const skin=skins[index%skins.length],vest=vests[index%2];
   // Broad shoulders taper into a waist; ellipsoids avoid square torsos and heads.
   oval(torso,navy,0,1.16,0,.215,.30,.125);
@@ -100,6 +102,7 @@ export function createActorModels(M){
   }
   mergeRigid(torso);
   function pose(time=0,pushing=false){
+   motion.time=time;motion.pushing=pushing;
    // The continuous coat hem drapes across the lap when seated, sways on foot.
    if(coatTail){coatTail.rotation.x=seated?-1.22:-.04+Math.sin(time*9)*.035;coatTail.rotation.z=seated?0:Math.sin(time*9)*.015;}
    if(seated){root.position.set(0,.23,-.27);torso.rotation.x=-.04;legs.forEach(({hip,knee})=>{hip.rotation.x=-1.4;knee.rotation.x=1.5;});}
@@ -109,7 +112,7 @@ export function createActorModels(M){
     elbow.rotation.x=seated?-.88:pushing?-.72:-.16;
    });
   }
-  pose();return {root,pose,coldCoat};
+  pose();const actor={root,pose,coldCoat,seated,index,motion};registry.workers.push(actor);return actor;
  }
  function wheel(parent,x,y,z,r=.33,w=.19){
   const g=new THREE.Group();g.position.set(x,y,z);parent.add(g);
@@ -131,7 +134,7 @@ export function createActorModels(M){
   link(g,seam,[0,.42,-.13],[0,1.01,-.72],.028);
   const grip=new THREE.Mesh(new THREE.TorusGeometry(.15,.023,5,12),seam);grip.position.set(0,1.05,-.73);grip.scale.y=.62;g.add(grip);
   link(g,steel,[-.20,.14,-.14],[.20,.14,-.14],.075);
-  return mergeRigid(g);
+  mergeRigid(g);registry.carts.push(g);return g;
  }
  function forklift(index,dynamicPallet,coldCoat=false){
   const g=new THREE.Group(),wheels=[];
@@ -167,8 +170,8 @@ export function createActorModels(M){
   mergeRigid(carriage);
   const cargo=dynamicPallet();cargo.position.set(0,.09,.68);carriage.add(cargo);
   const driver=worker(index,true,coldCoat);g.add(driver.root);
-  return {g,wheels,carriage,cargo,coldCoat};
+  const actor={g,wheels,carriage,cargo,coldCoat,driver};registry.forklifts.push(actor);return actor;
  }
  function stats(root){let triangles=0,draws=0;root.traverse(m=>{if(m.isMesh){triangles+=(m.geometry.index?m.geometry.index.count:m.geometry.attributes.position.count)/3;draws++;}});return {triangles,draws};}
- return {worker,palletTruck,forklift,round,mergeRigid,stats};
+ return {worker,palletTruck,forklift,round,mergeRigid,stats,registry};
 }
