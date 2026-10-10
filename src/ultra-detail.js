@@ -22,7 +22,7 @@ function manufactured(kind,size,anisotropy){
   let h=.5,v=238,r=.75;
   if(kind==='carton'){const edge=Math.min(x,y,size-1-x,size-1-y)/size;h=.4+grain*.12+c*.12;v=233+b*8+grain*10-(edge<.007?16:0);r=.84+grain*.14;}
   if(kind==='paint'||kind==='metal'){const scratch=Math.sin(y/size*Math.PI*2*181+b*.5)>.99&&a>.66;h=.5+grain*.035-(scratch?.06:0);v=239+a*8+c*5-(scratch?17:0);r=(kind==='paint'?.58:.33)+b*.15+(scratch?.19:0);}
-  if(kind==='panel'){const groove=Math.pow(.5+.5*Math.cos(x/size*Math.PI*2*12),26);h=.5+grain*.025-groove*.13;v=236+a*10-groove*10;r=.42+b*.17;}
+  if(kind==='panel'){const joint=Math.exp(-Math.pow(Math.min(x,size-x)/(size*.004),2)),ribs=Math.pow(.5+.5*Math.cos(x/size*Math.PI*2*8),20);h=.5+grain*.012-joint*.20-ribs*.012;v=240+a*7-joint*23-ribs*1.5;r=.48+b*.10;}
   if(kind==='pvc'){h=.5+.025*Math.sin(y/size*Math.PI*2*10)+grain*.025;v=226+a*19+b*7;r=.53+b*.19;}
   if(kind==='rubber'){const tread=Math.sin((x+y*.35)/size*Math.PI*2*18)>.88;h=.5+grain*.08-(tread?.14:0);v=203+a*29+grain*17;r=.85+b*.14;}
   if(kind==='fabric'){h=.5+.16*Math.sin(x/size*Math.PI*2*108)*Math.sin(y/size*Math.PI*2*108)+grain*.07;v=208+a*30+b*15;r=.9+grain*.09;}
@@ -49,7 +49,7 @@ function manufactured(kind,size,anisotropy){
 
 // Metre-scaled projection fixes extruded slab UVs and long stretched walls.
 // A dominant plane uses three texture reads, rather than nine for triplanar.
-function projectSurface(shader,tileSize){
+function projectSurface(shader,tileSize,kind){
  const declaration='varying vec3 vUltraPosition; varying vec3 vUltraNormal;\n';
  shader.vertexShader=declaration+shader.vertexShader.replace('#include <project_vertex>',`#include <project_vertex>
   vec4 ultraPosition=vec4(transformed,1.0);
@@ -62,18 +62,29 @@ function projectSurface(shader,tileSize){
   vec3 un=normalize(vUltraNormal),an=abs(un),p=vUltraPosition/${tileSize.toFixed(2)};
   vec2 ultraUv=an.y>=an.x&&an.y>=an.z?vec2(p.x,-p.z*sign(un.y)):(an.x>=an.z?vec2(-p.z*sign(un.x),p.y):vec2(p.x*sign(un.z),p.y));
   ${THREE.ShaderChunk.map_fragment.replaceAll('vMapUv','ultraUv')}`);
+ if(kind==='concrete'||kind==='frost'){
+  // Millimetre-width slab joints, filtered at distance; no decal geometry.
+  shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+   vec2 slabPosition=(vUltraPosition.xz+vec2(21.0,22.5))/4.5;
+   vec2 seamDistance=abs(fract(slabPosition+0.5)-0.5)*4.5;
+   vec2 seamAA=max(fwidth(vUltraPosition.xz)*0.8,vec2(0.002));
+   vec2 joint=vec2(1.0)-smoothstep(vec2(0.004),vec2(0.004)+seamAA,seamDistance);
+   float slabJoint=max(joint.x,joint.y)*step(0.85,abs(normalize(vUltraNormal).y));
+   float finishVariation=sin(vUltraPosition.x*0.29+sin(vUltraPosition.z*0.17))*sin(vUltraPosition.z*0.23);
+   diffuseColor.rgb*=1.0-0.13*slabJoint+0.018*finishVariation;`);
+ }
  for(const chunk of ['roughnessmap_fragment','normal_fragment_begin','normal_fragment_maps'])shader.fragmentShader=shader.fragmentShader.replace(`#include <${chunk}>`,THREE.ShaderChunk[chunk].replaceAll('vRoughnessMapUv','ultraUv').replaceAll('vNormalMapUv','ultraUv'));
 }
 
 const profiles={
- concrete:{surface:'concrete',roughness:.88,normal:.40,tile:3.5,color:'#d8dad5'},
- frost:{surface:'concrete',roughness:.93,normal:.28,tile:3.5,color:'#d8e6ed'},
- wall:{surface:'wall',roughness:.95,normal:.23,tile:2.5},
+ concrete:{surface:'concrete',roughness:.78,normal:.16,tile:3.5,color:'#d2d5d2'},
+ frost:{surface:'concrete',roughness:.89,normal:.20,tile:3.5,color:'#d8e6ed'},
+ wall:{surface:'wall',roughness:.91,normal:.14,tile:2.5},
  wood:{surface:'wood',roughness:1,normal:.45,color:'#e7d2ad'},
  carton:{surface:'carton',roughness:1,normal:.28},
  metal:{surface:'metal',roughness:.8,normal:.18,metalness:.88},
  paint:{surface:'paint',roughness:.88,normal:.22,metalness:.06},
- panel:{surface:'panel',roughness:.85,normal:.30,metalness:.08,tile:1.15},
+ panel:{surface:'panel',roughness:.80,normal:.16,metalness:0,tile:1.15},
  pvc:{surface:'pvc',roughness:.94,normal:.18,metalness:0},
  rubber:{surface:'rubber',roughness:1,normal:.48,metalness:0},
  fabric:{surface:'fabric',roughness:1,normal:.48,metalness:0},
@@ -105,7 +116,7 @@ export function createUltraDetail({scene,renderer,ao,sun,materials,onChange}){
     m.normalScale.setScalar(p.normal??0);m.roughness=p.roughness;m.metalness=p.metalness??0;
     if(p.color)m.color.set(p.color);else if(['paint','pvc','fabric'].includes(kind)){const hsl={};o.color.getHSL(hsl);m.color.setHSL(hsl.h,hsl.s*.80,hsl.l);}
     m.envMapIntensity=kind==='metal'?1.25:1;
-    if(p.tile){m.onBeforeCompile=shader=>{o.onBeforeCompile.call(m,shader,renderer);projectSurface(shader,p.tile);};m.customProgramCacheKey=()=>`ultra-metres-${kind}-v2`;}
+    if(p.tile){m.onBeforeCompile=shader=>{o.onBeforeCompile.call(m,shader,renderer);projectSurface(shader,p.tile,kind);};m.customProgramCacheKey=()=>`ultra-metres-${kind}-v3`;}
    }else{Object.assign(m,o);m.normalScale=o.normalScale.clone();m.color=o.color.clone();}
    m.needsUpdate=true;
   }

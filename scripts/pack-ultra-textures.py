@@ -18,6 +18,8 @@ for kind in ['concrete', 'wall', 'wood']:
             image = image.point(lambda v: int(low + v / 255 * (high - low))).convert('RGB')
         if name == 'map' and kind == 'concrete':
             image = ImageEnhance.Color(image).enhance(.12)
+            # A maintained sealed warehouse slab, with restrained aggregate contrast.
+            image = ImageEnhance.Contrast(image).enhance(.48)
             image = ImageEnhance.Brightness(image).enhance(1.16)
         output = io.BytesIO()
         image.save(output, format='WEBP', quality=88 if name == 'normalMap' else 83, method=6)

@@ -25,3 +25,10 @@ Other finishes (paint, bare metal, insulated panels, PVC curtains, rubber,
 fabric, skin, packing tape and printed cartons) are generated in
 `src/ultra-detail.js`. The clean warehouse keeps only subtle wear. These maps
 are surface detail, not a replacement for higher resolution actor geometry.
+
+Concrete albedo now has restrained contrast and lower normal strength to suggest
+a maintained sealed slab. Fine 4.5m slab joints use a derivative-filtered shader
+mask, so they fade at distance without extra draw calls or geometry. This is an
+appearance detail, not a surveyed joint layout. Insulated panels have narrow
+sheet joints and shallow ribs; wall and panel normal strength is reduced to
+avoid a corrugated cardboard appearance. All hooks restore on quality fallback.

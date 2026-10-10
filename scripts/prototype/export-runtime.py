@@ -47,13 +47,8 @@ try:
                 # Short work jacket, including zipper and lower reflective band.
                 v.co.z = .89 + (z-.70) * (.15/.34)
                 v.co.x *= .89
-            elif seated and z < .90:
-                # The long insulated hem follows both thighs across the driver's lap.
-                amount = min(1, max(0, (.90-z)/.17))
-                spine.add([v.index], 1-amount, 'REPLACE')
-                for side in ['L','R']:
-                    body.vertex_groups['thigh.'+side].add([v.index], amount*.5, 'REPLACE')
         body.data.update()
+    exec(compile(Path('C:/github/etak-warehouse-3d/scripts/prototype/runtime-realism.py').read_text(), 'runtime-realism.py', 'exec'))
     bpy.ops.object.select_all(action='DESELECT')
     for o in copies: o.select_set(True)
     bpy.context.view_layer.objects.active = roots[0]
@@ -61,8 +56,15 @@ try:
     target = out/'warehouse-actors.glb'
     bpy.ops.export_scene.gltf(filepath=str(target), export_format='GLB', use_selection=True,
         use_active_scene=True, export_image_format='JPEG', export_jpeg_quality=88,
-        export_animations=False, export_yup=True)
+        export_animations=False, export_yup=True, export_vertex_color='ACTIVE')
     (out/'embedded.json').write_text(json.dumps(base64.b64encode(target.read_bytes()).decode('ascii')))
     result = {'bytes':target.stat().st_size, 'roots':[r.name for r in roots]}
 finally:
-    for o in reversed(copies): bpy.data.objects.remove(o, do_unlink=True)
+    for o in reversed(copies):
+        data=o.data
+        bpy.data.objects.remove(o, do_unlink=True)
+        if data and data.users==0:
+            if isinstance(data,bpy.types.Mesh):bpy.data.meshes.remove(data)
+            elif isinstance(data,bpy.types.Armature):bpy.data.armatures.remove(data)
+    for m in globals().get('runtime_materials',{}).values():
+        if m.users==0:bpy.data.materials.remove(m)

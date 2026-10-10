@@ -8,6 +8,7 @@ import modelData from '../assets/actors/embedded.json';
 export function createUltraActors({actorModels,renderer,camera}){
  const {registry}=actorModels,workers=[],forklifts=[],carts=[];
  const geometries=new Set(),materials=new Set(),textures=new Set(),skeletons=new Set();
+ const staffMaterials=new Map();
  const point=new THREE.Vector3(),axisX=new THREE.Vector3(1,0,0),q=new THREE.Quaternion();
  let wanted=false,enabled=false,pending=null,loaded=false,error=null;
  function track(root){root.traverse(o=>{
@@ -28,7 +29,19 @@ export function createUltraActors({actorModels,renderer,camera}){
   const model=clone(source),legacy=existing(actor.root),bones=new Map(),shared=new Map();
   model.name='Ultra_'+source.name;model.visible=false;
   // SkeletonUtils copies a skeleton per material primitive. Reuse one per person.
-  model.traverse(o=>{if(o.isSkinnedMesh){const key=o.skeleton.bones.map(b=>b.uuid).join();if(shared.has(key))o.skeleton=shared.get(key);else shared.set(key,o.skeleton);}
+  model.traverse(o=>{if(o.isSkinnedMesh){const key=o.skeleton.bones.map(b=>b.uuid).join();if(shared.has(key))o.skeleton=shared.get(key);else shared.set(key,o.skeleton);
+    const base=o.material;
+    if(/^(Skin|Insulated navy fabric)/.test(base.name)){
+     const variant=actor.index%3,key=base.uuid+':'+variant;
+     if(!staffMaterials.has(key)){
+      const material=base.clone();
+      if(base.name.startsWith('Skin'))material.color.set(['#b88b6f','#cfab8d','#9c7058'][variant]);
+      else material.color.set(['#ffffff','#dfe5e9','#c7d1d8'][variant]);
+      staffMaterials.set(key,material);
+     }
+     o.material=staffMaterials.get(key);
+    }
+   }
    if(o.isBone)bones.set(o.name.replace(/[^a-z]/gi,'').replace(/\d+$/,''),{bone:o,rest:o.quaternion.clone()});
   });
   // Existing root origin is at the old driver's feet; align pelvis to NICHIYU seat.
@@ -82,6 +95,9 @@ export function createUltraActors({actorModels,renderer,camera}){
   if(!enabled)return;
   for(const w of workers){
    const {time,pushing}=w.actor.motion,seated=w.actor.seated;
+   if(!seated)w.model.position.y=Math.abs(Math.sin(time*9))*.009;
+   pitch(w,'spine',seated?-.035:pushing?.055:Math.sin(time*18)*.012);
+   pitch(w,'head',seated?.02:pushing?-.025:-Math.sin(time*18)*.008);
    for(const [i,side] of ['L','R'].entries()){
     const phase=time*9+i*Math.PI;
     pitch(w,'thigh'+side,seated?-1.4:Math.sin(phase)*.36);
