@@ -1,0 +1,17 @@
+{
+  "manufacturer": "NICHIYU",
+  "type": "Three-wheel electric counterbalance",
+  "visual_markings": "SICOS AC 15",
+  "reference_files": [
+    "0012_3-Wheel-CounterBalance-all_1110x700.jpg",
+    "FBT2-1024x834.jpg.webp",
+    "nichiyu-3-wheel-300x300.png",
+    "Nichiyu-Counterbalance-Forklift-\u2013-3-Wheel-FBT16-e1642472327561.jpg"
+  ],
+  "estimated_dimensions_m": {
+    "width": 1.39,
+    "body_length": 1.92,
+    "mast_height": 2.8
+  },
+  "scope": "Visual reference reconstruction, not exact manufacturer CAD"
+}

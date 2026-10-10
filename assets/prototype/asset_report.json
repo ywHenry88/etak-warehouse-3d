@@ -1,0 +1,47 @@
+{
+  "blender": "5.2.2 LTS",
+  "transport": "interactive Blender MCP",
+  "assets": {
+    "Forklift_LOD0": {
+      "triangles": 23232,
+      "primitives": 35,
+      "bytes": 853672
+    },
+    "Worker_LOD0": {
+      "triangles": 13184,
+      "primitives": 10,
+      "bytes": 623924
+    },
+    "Pallet_load_LOD0": {
+      "triangles": 7716,
+      "primitives": 6,
+      "bytes": 600768
+    },
+    "Pallet_truck_LOD0": {
+      "triangles": 796,
+      "primitives": 4,
+      "bytes": 99260
+    },
+    "Surface_sample": {
+      "triangles": 4220,
+      "primitives": 8,
+      "bytes": 890588
+    },
+    "Forklift_LOD1": {
+      "triangles": 11990,
+      "primitives": 35,
+      "bytes": 566284
+    },
+    "Worker_LOD1": {
+      "triangles": 5800,
+      "primitives": 10,
+      "bytes": 376016
+    },
+    "Pallet_load_LOD1": {
+      "triangles": 3724,
+      "primitives": 6,
+      "bytes": 499208
+    }
+  },
+  "combined_bytes": 3723920
+}

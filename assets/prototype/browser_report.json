@@ -1,0 +1,90 @@
+{
+  "desktop": {
+    "new": {
+      "version": "new",
+      "subject": "all",
+      "lod": 0,
+      "fps": 29.980013324450365,
+      "frameMs": 33.355555555555554,
+      "triangles": 49148,
+      "calls": 63,
+      "animations": [
+        {
+          "name": "Animation",
+          "duration": 1.9600000381469727,
+          "tracks": 90
+        }
+      ],
+      "rendererTextures": 33,
+      "compact": false,
+      "webgl": true,
+      "meanFrameMs": 33.35323741007194,
+      "p95FrameMs": 33.5
+    },
+    "old": {
+      "version": "old",
+      "subject": "all",
+      "lod": 0,
+      "fps": 29.980013324450404,
+      "frameMs": 33.35555555555551,
+      "triangles": 15664,
+      "calls": 60,
+      "animations": [
+        {
+          "name": "Animation",
+          "duration": 1.9600000381469727,
+          "tracks": 90
+        }
+      ],
+      "rendererTextures": 60,
+      "compact": false,
+      "webgl": true,
+      "meanFrameMs": 33.355395683453246,
+      "p95FrameMs": 33.5
+    }
+  },
+  "emulatedMobile": {
+    "new": {
+      "version": "new",
+      "subject": "all",
+      "lod": 0,
+      "fps": 29.978016121510905,
+      "frameMs": 33.35777777777776,
+      "triangles": 49148,
+      "calls": 63,
+      "animations": [
+        {
+          "name": "Animation",
+          "duration": 1.9600000381469727,
+          "tracks": 90
+        }
+      ],
+      "rendererTextures": 33,
+      "compact": true,
+      "webgl": true,
+      "meanFrameMs": 33.354676258992804,
+      "p95FrameMs": 33.599999999999454
+    },
+    "old": {
+      "version": "old",
+      "subject": "all",
+      "lod": 0,
+      "fps": 29.980013324450365,
+      "frameMs": 33.355555555555554,
+      "triangles": 15664,
+      "calls": 60,
+      "animations": [
+        {
+          "name": "Animation",
+          "duration": 1.9600000381469727,
+          "tracks": 90
+        }
+      ],
+      "rendererTextures": 60,
+      "compact": true,
+      "webgl": true,
+      "meanFrameMs": 33.354676258992804,
+      "p95FrameMs": 33.5
+    }
+  }
+}

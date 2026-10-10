@@ -4,6 +4,8 @@ Traditional Chinese / English interactive Three.js warehouse, based on the suppl
 
 **Live site:** https://ywHenry88.github.io/etak-warehouse-3d/
 
+**Blender / NICHIYU asset pilot:** https://ywHenry88.github.io/etak-warehouse-3d/prototype.html — isolated before/after viewer, detail levels, worker animation, measured FPS and three Cycles stills. See assets/prototype/README.md for model budgets, test evidence and remaining integration work.
+
 ## Explore
 
 - The gold play arrow immediately before **Controls** starts or pauses the auto tour. The globe at the upper right switches between Traditional Chinese (default) and English.

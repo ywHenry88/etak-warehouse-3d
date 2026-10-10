@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+import {build} from 'esbuild';
+const out='C:/Users/Henry/Desktop/Etak/Blender_Prototype_20261010';
+fs.mkdirSync('assets/prototype',{recursive:true});
+fs.copyFileSync(`${out}/ETAK_Pilot_Web.glb`,'assets/prototype/ETAK_Pilot_Web.glb');
+fs.copyFileSync(`${out}/asset_report.json`,'assets/prototype/asset_report.json');
+fs.copyFileSync(`${out}/ASSET_SOURCES.md`,'assets/prototype/ASSET_SOURCES.md');
+fs.copyFileSync(`${out}/nichiyu_reference.json`,'assets/prototype/nichiyu_reference.json');
+const model=JSON.stringify(fs.readFileSync('assets/prototype/ETAK_Pilot_Web.glb').toString('base64'));
+const photos=JSON.stringify(['01_Asset_pilot.jpg','02_Forklift_detail.jpg','03_Worker_goods.jpg'].map(p=>'data:image/jpeg;base64,'+fs.readFileSync(`${out}/${p}`).toString('base64')));
+const bundle=await build({entryPoints:['src/prototype.js'],bundle:true,minify:true,format:'iife',write:false,legalComments:'none'});
+const html=fs.readFileSync('scripts/prototype/preview.html','utf8').replace('__MODEL__',()=>model).replace('__PHOTOS__',()=>photos).replace('__BUNDLE__',()=>bundle.outputFiles[0].text.replaceAll('</script','<\\/script')).replace(/[ \t]+$/gm,'');
+fs.writeFileSync('prototype.html',html);fs.writeFileSync(`${out}/Preview.html`,html);
+console.log(`Offline pilot: ${(Buffer.byteLength(html)/1048576).toFixed(2)} MiB`);
