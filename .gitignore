@@ -6,3 +6,8 @@ overview.png
 assets/ultra/source/
 scripts/prototype/__pycache__/
 nichiyu-reference-view.jpg
+
+# Retired previews stay local; publish only the latest warehouse entry.
+prototype.html
+assets/prototype/
+blender_sample/

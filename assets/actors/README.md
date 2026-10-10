@@ -3,7 +3,7 @@
 The production GLB is exported from the Blender MCP asset pilot using
 `scripts/prototype/export-runtime.py`. `embedded.json` contains the identical
 GLB as base64 for offline single-file HTML. Source references, texture provenance
-and human mesh attribution are in [the pilot sources](../prototype/ASSET_SOURCES.md).
+and human mesh attribution are in [the asset sources](ASSET_SOURCES.md).
 
 Ultra now uses NICHIYU FBT-style electric counterbalance forklifts, articulated
 drivers, eight walking/pushing staff and twelve pallet trucks (eight moving,

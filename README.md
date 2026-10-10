@@ -2,9 +2,10 @@
 
 Traditional Chinese / English interactive Three.js warehouse, based on the supplied ATL A1 East plans and CCTV reference photographs.
 
-**Live site:** https://ywHenry88.github.io/etak-warehouse-3d/
+**Latest version (single public entry):** https://ywHenry88.github.io/etak-warehouse-3d/
 
-**Blender / NICHIYU asset pilot:** https://ywHenry88.github.io/etak-warehouse-3d/prototype.html — isolated before/after viewer, detail levels, worker animation, measured FPS and three Cycles stills. See assets/prototype/README.md for model budgets, test evidence and remaining integration work.
+Ultra includes the integrated Blender NICHIYU forklifts, staff and pallet trucks. See [actor details](assets/actors/README.md) for model budgets and validation. The separate pilot viewer has been retired.
+
 
 ## Explore
 
@@ -54,11 +55,12 @@ node test_actors.cjs
 node test_cold_mist.cjs
 node test_performance.cjs
 node test_ultra_detail.cjs
+node test_ultra_actors.cjs
 node test_tour_flight.cjs
 node test_tour_audio.cjs
 ```
 
-The current browser test uses an installed Microsoft Edge. It checks four forklifts and eight staff, randomized starts, mixed pallet-truck use, continuous work, route/wall and closed-door clearance, tours at multiple traffic phases, W2/W6 levels, both new doors, rack-free W3 and the compact mobile controls. Set `WAREHOUSE_URL` to test a deployed site. Detailed output is saved locally in `final-validation.json`. Earlier version-specific tests have been superseded by `test_v8.cjs`.
+The current browser test uses an installed Microsoft Edge. It checks four forklifts and eight staff, randomized starts, mixed pallet-truck use, continuous work, route/wall and closed-door clearance, tours at multiple traffic phases, W2/W6 levels, both new doors, rack-free W3 and the compact mobile controls. Set `WAREHOUSE_URL` to test a deployed site. Detailed output is saved locally in `final-validation.json`.
 
 `test_actors.cjs` checks model triangle budgets and human scale, renders a close-up model sheet, and samples FPS on desktop and an emulated mobile viewport. Headless/emulated measurements do not certify performance on physical phones.
 
